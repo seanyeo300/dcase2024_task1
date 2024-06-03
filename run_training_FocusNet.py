@@ -14,7 +14,6 @@ from helpers.init import worker_init_fn
 from models.baseline_half_depth import get_model
 from helpers.utils import mixstyle
 from helpers import nessi
-
 torch.set_float32_matmul_precision("high")
 
 ## In FocusNet, we need a baseline or it's logits to adjust the weighting of the loss for student logits.
@@ -491,7 +490,7 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="DCASE24_Task1")
-    parser.add_argument('--experiment_name', type=str, default="FocusNet_Ali1_sub5_Half_Depth_Teacher_CM1-8")
+    parser.add_argument('--experiment_name', type=str, default="FocusNet_Ali1_sub5_16BC_T_16BC_S_FMS_DIR")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
 
@@ -508,7 +507,7 @@ if __name__ == '__main__':
     parser.add_argument('--n_classes', type=int, default=10)  # classification model with 'n_classes' output neurons
     parser.add_argument('--in_channels', type=int, default=1)
     # adapt the complexity of the neural network (3 main dimensions to scale the baseline)
-    parser.add_argument('--base_channels', type=int, default=8)
+    parser.add_argument('--base_channels', type=int, default=16)
     parser.add_argument('--channels_multiplier', type=float, default=2.8) # used 2.8 for 8 channel
     parser.add_argument('--expansion_rate', type=float, default=2.1)
 
@@ -531,7 +530,6 @@ if __name__ == '__main__':
     parser.add_argument('--hop_length', type=int, default=500)  # in samples (corresponds to ~16 ms)
     parser.add_argument('--n_fft', type=int, default=4096)  # length (points) of fft, e.g. 4096 point FFT
     parser.add_argument('--n_mels', type=int, default=256)  # number of mel bins
-    # parser.add_argument('--freqm', type=int, default=0)
     parser.add_argument('--freqm', type=int, default=48)  # mask up to 'freqm' spectrogram bins
     parser.add_argument('--timem', type=int, default=0)  # mask up to 'timem' spectrogram frames
     parser.add_argument('--f_min', type=int, default=0)  # mel bins are created for freqs. between 'f_min' and 'f_max'
