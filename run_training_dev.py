@@ -116,6 +116,9 @@ class PLModule(pl.LightningModule):
         }
         return [optimizer], [lr_scheduler_config]
     
+    def mixup_criterion(criterion, pred, y_a, y_b, lam):
+            return lam * criterion(pred, y_a) + (1 - lam) * criterion(pred, y_b)
+    
     def training_step(self, train_batch, batch_idx):
         """
         :param train_batch: contains one batch from train dataloader
@@ -123,8 +126,7 @@ class PLModule(pl.LightningModule):
         :return: loss to update model parameters
         """
         criterion = torch.nn.CrossEntropyLoss()
-        def mixup_criterion(criterion, pred, y_a, y_b, lam):
-            return lam * criterion(pred, y_a) + (1 - lam) * criterion(pred, y_b)
+        
         x, files, labels, devices, cities, logits = train_batch
         x = self.mel_forward(x)  # we convert the raw audio signals into log mel spectrograms
         labels = labels.type(torch.LongTensor)
@@ -137,7 +139,7 @@ class PLModule(pl.LightningModule):
         inputs, targets_a, targets_b = map(Variable, (inputs,
                                                       targets_a, targets_b))
         y_hat = self.model(x.cuda())
-        loss = mixup_criterion(criterion,y_hat, targets_a, targets_b, lam)
+        loss = self.mixup_criterion(criterion,y_hat, targets_a, targets_b, lam)
         
         # samples_loss = F.cross_entropy(y_hat, labels, reduction="none")
         # loss = samples_loss.mean()
