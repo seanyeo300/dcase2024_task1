@@ -116,6 +116,9 @@ class PLModule(pl.LightningModule):
         }
         return [optimizer], [lr_scheduler_config]
     
+    def mixup_criterion(self,criterion, pred, y_a, y_b, lam):
+            return lam * criterion(pred, y_a) + (1 - lam) * criterion(pred, y_b)
+    
     def training_step(self, train_batch, batch_idx):
         """
         :param train_batch: contains one batch from train dataloader
@@ -123,8 +126,7 @@ class PLModule(pl.LightningModule):
         :return: loss to update model parameters
         """
         criterion = torch.nn.CrossEntropyLoss()
-        def mixup_criterion(criterion, pred, y_a, y_b, lam):
-            return lam * criterion(pred, y_a) + (1 - lam) * criterion(pred, y_b)
+        
         x, files, labels, devices, cities, logits = train_batch
         x = self.mel_forward(x)  # we convert the raw audio signals into log mel spectrograms
         labels = labels.type(torch.LongTensor)
@@ -137,14 +139,14 @@ class PLModule(pl.LightningModule):
         inputs, targets_a, targets_b = map(Variable, (inputs,
                                                       targets_a, targets_b))
         y_hat = self.model(x.cuda())
-        loss = mixup_criterion(criterion,y_hat, targets_a, targets_b, lam)
+        loss = self.mixup_criterion(criterion,y_hat, targets_a, targets_b, lam)
         
         # samples_loss = F.cross_entropy(y_hat, labels, reduction="none")
         # loss = samples_loss.mean()
 
         self.log("lr", self.trainer.optimizers[0].param_groups[0]['lr'])
         self.log("epoch", self.current_epoch)
-        self.log("train/loss", loss.detach().cpu())
+        self.log("train/loss", loss.detach())
         return loss
 
     def on_train_epoch_end(self):
@@ -185,7 +187,7 @@ class PLModule(pl.LightningModule):
             results["lbln_correct." + self.label_ids[l]] = \
                 results["lbln_correct." + self.label_ids[l]] + n_correct_per_sample[i]
             results["lblcnt." + self.label_ids[l]] = results["lblcnt." + self.label_ids[l]] + 1
-        results = {k: v.cpu() for k, v in results.items()}
+        results = {k: v.detach() for k, v in results.items()}
         self.validation_step_outputs.append(results)
 
     def on_validation_epoch_end(self):
@@ -480,7 +482,7 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="DCASE24_Task1")
-    parser.add_argument('--experiment_name', type=str, default="Baseline_Ali_sub5_441K_DIR_FMS_Mixup_test_16_channel")
+    parser.add_argument('--experiment_name', type=str, default="Baseline_Ali_sub25_441K_DIR_FMS_Mixup_test_24_channel")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
 
@@ -491,13 +493,13 @@ if __name__ == '__main__':
     # dataset
     # subset in {100, 50, 25, 10, 5}
     parser.add_argument('--orig_sample_rate', type=int, default=44100)
-    parser.add_argument('--subset', type=int, default=5)
+    parser.add_argument('--subset', type=int, default=25)
 
     # model
     parser.add_argument('--n_classes', type=int, default=10)  # classification model with 'n_classes' output neurons
     parser.add_argument('--in_channels', type=int, default=1)
     # adapt the complexity of the neural network (3 main dimensions to scale the baseline)
-    parser.add_argument('--base_channels', type=int, default=16)
+    parser.add_argument('--base_channels', type=int, default=24)
     parser.add_argument('--channels_multiplier', type=float, default=1.8)
     parser.add_argument('--expansion_rate', type=float, default=2.1)
 
