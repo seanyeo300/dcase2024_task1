@@ -129,7 +129,15 @@ class PLModule(pl.LightningModule):
         #     'optimizer': optimizer,
         #     'lr_scheduler': lr_scheduler
         # }
-
+    def cross_entropy(self, logits, onehot_labels, ls=False):
+        if ls:
+            onehot_labels = 0.9 * onehot_labels + 0.1 / logits.size(-1)
+            onehot_labels = onehot_labels.double()
+        return (-1.0 * torch.mean(torch.sum(onehot_labels * F.log_softmax(logits, -1), -1), 0))
+    def neg_entropy(self, logits):
+        probs = F.softmax(logits, -1)
+        return torch.mean(torch.sum(probs * F.log_softmax(logits, -1), -1), 0)
+    
     def training_step(self, train_batch, batch_idx):
         """
         :param train_batch: contains one batch from train dataloader
@@ -144,20 +152,40 @@ class PLModule(pl.LightningModule):
             # frequency mixstyle
             x = mixstyle(x, self.config.mixstyle_p, self.config.mixstyle_alpha)
         y_hat = self.model(x.cuda()) # This is the outputs
+        
         # At this point we want to perform KLdiv loss      
-        samples_loss = F.cross_entropy(y_hat, labels, reduction="none")
-        label_loss = samples_loss.mean()
+        # samples_loss = F.cross_entropy(y_hat, labels, reduction="none")
+        # label_loss = samples_loss.mean()
         # Temperature adjusted probabilities of teacher and student
         with torch.cuda.amp.autocast():
             y_hat_soft = F.log_softmax(y_hat / self.config.temperature, dim=-1)
             teacher_logits = F.log_softmax(teacher_logits / self.config.temperature, dim=-1)
         kd_loss = self.kl_div_loss(y_hat_soft, teacher_logits).mean()
         kd_loss = kd_loss * (self.config.temperature ** 2)
-        loss = self.config.kd_lambda * label_loss + (1 - self.config.kd_lambda) * kd_loss
+        
+        ############ Author's Version of FocusNet Loss #############
+        # Loss CLS
+        diff = F.softmax(y_hat,-1)- F.softmax(teacher_logits,-1)
+        onehot_labels = F.one_hot(labels,y_hat.size(-1))
+        loss_cls = self.cross_entropy(y_hat+diff,onehot_labels,True)
+        
+        # R_Entropy
+        R_negtropy = self.neg_entropy(y_hat)
+        
+        #R_Attn
+        mwl = F.softmax(teacher_logits/2,-1)>1.0/teacher_logits.size(-1)
+        mwl = torch.clamp(mwl.double()+onehot_labels,0,1)
+        mwl=mwl/torch.sum(mwl,-1,True)
+        R_attn = self.cross_entropy(y_hat,mwl.detach(),False)
+        
+        # loss
+        focus_loss = loss_cls+R_attn + R_negtropy
+        
+        loss = self.config.kd_lambda * focus_loss + (1 - self.config.kd_lambda) * kd_loss
         # loss = label_loss + kd_loss
         self.log("lr", self.trainer.optimizers[0].param_groups[0]['lr'])
         self.log("epoch", self.current_epoch)
-        self.log("train/loss", loss.detach().cpu())
+        self.log("train/loss", loss.detach())
         return loss
 
     def on_train_epoch_end(self):
@@ -198,7 +226,7 @@ class PLModule(pl.LightningModule):
             results["lbln_correct." + self.label_ids[l]] = \
                 results["lbln_correct." + self.label_ids[l]] + n_correct_per_sample[i]
             results["lblcnt." + self.label_ids[l]] = results["lblcnt." + self.label_ids[l]] + 1
-        results = {k: v.cpu() for k, v in results.items()}
+        results = {k: v.detach() for k, v in results.items()}
         self.validation_step_outputs.append(results)
 
     def on_validation_epoch_end(self):

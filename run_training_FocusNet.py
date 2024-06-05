@@ -226,7 +226,7 @@ class PLModule(pl.LightningModule):
             results["lbln_correct." + self.label_ids[l]] = \
                 results["lbln_correct." + self.label_ids[l]] + n_correct_per_sample[i]
             results["lblcnt." + self.label_ids[l]] = results["lblcnt." + self.label_ids[l]] + 1
-        results = {k: v.cpu() for k, v in results.items()}
+        results = {k: v.detach() for k, v in results.items()}
         self.validation_step_outputs.append(results)
 
     def on_validation_epoch_end(self):
