@@ -11,7 +11,7 @@ import json
 
 from dataset.dcase24_dev_teacher import get_training_set, get_test_set, get_eval_set
 from helpers.init import worker_init_fn
-from models.baseline_half_depth import get_model
+from models.baseline import get_model
 from helpers.utils import mixstyle
 from helpers import nessi
 torch.set_float32_matmul_precision("high")
@@ -116,7 +116,15 @@ class PLModule(pl.LightningModule):
             "frequency": 1
         }
         return [optimizer], [lr_scheduler_config]
-
+    def cross_entropy(self, logits, onehot_labels, ls=False):
+        if ls:
+            onehot_labels = 0.9 * onehot_labels + 0.1 / logits.size(-1)
+            onehot_labels = onehot_labels.double()
+        return (-1.0 * torch.mean(torch.sum(onehot_labels * F.log_softmax(logits, -1), -1), 0))
+    def neg_entropy(self, logits):
+        probs = F.softmax(logits, -1)
+        return torch.mean(torch.sum(probs * F.log_softmax(logits, -1), -1), 0)
+    
     def training_step(self, train_batch, batch_idx):
         """
         :param train_batch: contains one batch from train dataloader
@@ -131,26 +139,53 @@ class PLModule(pl.LightningModule):
             # frequency mixstyle
             x = mixstyle(x, self.config.mixstyle_p, self.config.mixstyle_alpha)
         y_hat = self.model(x.cuda()) # This is the outputs
-        # At this point we want to perform FocusNet loss instead      
-        samples_loss = F.cross_entropy(y_hat, labels, reduction="none")
-        cce_loss = samples_loss.mean()
-        softmax_y = F.softmax(y_hat,-1)
-        entropy_loss = F.cross_entropy(y_hat,softmax_y, reduction= "none")
-        dt = F.softmax(y_hat, -1) - F.softmax(teacher_logits, -1)
-        y_d = y_hat + dt
-        loss_cls = F.cross_entropy(y_d,labels, reduction="none")
+        ########### My version of FocusNet Loss#############
+        # samples_loss = F.cross_entropy(y_hat, labels, reduction="none")
+        # cce_loss = samples_loss.mean()
+        # # At this point we want to perform FocusNet loss instead
+        # softmax_y = F.softmax(y_hat,-1)
+        # entropy_loss = F.cross_entropy(y_hat,softmax_y, reduction= "none")
+        # dt = F.softmax(y_hat, -1) - F.softmax(teacher_logits, -1)
+        # y_d = y_hat + dt
+        # loss_cls1 = F.cross_entropy(y_d,labels, reduction="mean", label_smoothing=0) # need to add label smoothing 0.1
+        # one_hot_labels = F.one_hot(labels, num_classes=10)
         
-        # print(labels)
-        one_hot_labels = F.one_hot(labels, num_classes=10)
-        multi_warm_lb = F.softmax(teacher_logits/2, -1) > 1.0/teacher_logits.size(-1)           # eqn(4)* see lab notebook
-        multi_warm_lb = torch.clamp(multi_warm_lb.double() + one_hot_labels, 0, 1)              # eqn(5) .double sets data type to float 64 instead of int 0,1
-        multi_warm_lb = multi_warm_lb/torch.sum(multi_warm_lb, -1, keepdim = True)                # eqn(6)
-        R_attention = F.cross_entropy(y_hat, multi_warm_lb.detach(), reduction = "none")          # eqn(10)
-        loss = loss_cls + R_attention - entropy_loss
-        loss = loss.mean() # currently, mean after adding
+        # multi_warm_lb = F.softmax(teacher_logits/2, -1) > 1.0/teacher_logits.size(-1)           # eqn(4)* see lab notebook
+        # multi_warm_lb = torch.clamp(multi_warm_lb.double() + one_hot_labels, 0, 1)              # eqn(5) .double sets data type to float 64 instead of int 0,1
+        # multi_warm_lb = multi_warm_lb/torch.sum(multi_warm_lb, -1, keepdim = True)                # eqn(6)
+        # # print(f"MWL loss: {multi_warm_lb}")
+        # # R_attention = F.cross_entropy(y_hat, multi_warm_lb.detach(), reduction = "none")          # eqn(10)
+        # R_attention = self.cross_entropy(y_hat, multi_warm_lb.detach(), ls=False)          # eqn(10)
+        # # print(f"R_attention loss: {R_attention}")
+        # loss = loss_cls2 + R_attention - entropy_loss
+        # loss = loss.mean() # currently, mean after adding
+        
+        ############ Author's Version of FocusNet Loss #############
+        # Loss CLS
+        diff = F.softmax(y_hat,-1)- F.softmax(teacher_logits,-1)
+        onehot_labels = F.one_hot(labels,y_hat.size(-1))
+        loss_cls = self.cross_entropy(y_hat+diff,onehot_labels,True)
+        
+        # R_Entropy
+        R_negtropy = self.neg_entropy(y_hat)
+        
+        #R_Attn
+        mwl = F.softmax(teacher_logits/2,-1)>1.0/teacher_logits.size(-1)
+        mwl = torch.clamp(mwl.double()+onehot_labels,0,1)
+        mwl=mwl/torch.sum(mwl,-1,True)
+        R_attn = self.cross_entropy(y_hat,mwl.detach(),False)
+        
+        # loss
+        loss = loss_cls+R_attn + R_negtropy
+        
+        
         self.log("lr", self.trainer.optimizers[0].param_groups[0]['lr'])
         self.log("epoch", self.current_epoch)
-        self.log("train/loss", loss.detach().cpu())
+        self.log("train/loss", loss.detach())
+        
+        
+        
+        
         return loss
 
     def on_train_epoch_end(self):
@@ -490,7 +525,7 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="DCASE24_Task1")
-    parser.add_argument('--experiment_name', type=str, default="FocusNet_Ali1_sub5_16BC_T_16BC_S_FMS_DIR")
+    parser.add_argument('--experiment_name', type=str, default="FocusNet_Ali1_sub5_16BC_T_8BC_S_FMS")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
 
@@ -507,8 +542,8 @@ if __name__ == '__main__':
     parser.add_argument('--n_classes', type=int, default=10)  # classification model with 'n_classes' output neurons
     parser.add_argument('--in_channels', type=int, default=1)
     # adapt the complexity of the neural network (3 main dimensions to scale the baseline)
-    parser.add_argument('--base_channels', type=int, default=16)
-    parser.add_argument('--channels_multiplier', type=float, default=2.8) # used 2.8 for 8 channel
+    parser.add_argument('--base_channels', type=int, default=8)
+    parser.add_argument('--channels_multiplier', type=float, default=1.8) 
     parser.add_argument('--expansion_rate', type=float, default=2.1)
 
     # training
