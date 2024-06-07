@@ -482,7 +482,7 @@ if __name__ == '__main__':
     # dataset
     # subset in {100, 50, 25, 10, 5}
     parser.add_argument('--orig_sample_rate', type=int, default=44100)
-    parser.add_argument('--subset', type=int, default=5)
+    parser.add_argument('--subset', type=int, default=100)
 
     # model
     parser.add_argument('--n_classes', type=int, default=10)  # classification model with 'n_classes' output neurons
