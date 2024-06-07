@@ -168,7 +168,7 @@ class PLModule(pl.LightningModule):
         results = {'loss': samples_loss.mean(), "n_correct": n_correct,
                    "n_pred": torch.as_tensor(len(labels), device=self.device)}
 
-        # log metric per device and scene
+        '''# log metric per device and scene
         for d in self.device_ids:
             results["devloss." + d] = torch.as_tensor(0., device=self.device)
             results["devcnt." + d] = torch.as_tensor(0., device=self.device)
@@ -187,7 +187,7 @@ class PLModule(pl.LightningModule):
             results["lbln_correct." + self.label_ids[l]] = \
                 results["lbln_correct." + self.label_ids[l]] + n_correct_per_sample[i]
             results["lblcnt." + self.label_ids[l]] = results["lblcnt." + self.label_ids[l]] + 1
-        results = {k: v.detach() for k, v in results.items()}
+        results = {k: v.detach() for k, v in results.items()}'''
         self.validation_step_outputs.append(results)
 
     def on_validation_epoch_end(self):
@@ -204,7 +204,7 @@ class PLModule(pl.LightningModule):
 
         logs = {'acc': acc, 'loss': avg_loss}
 
-        # log metric per device and scene
+        '''# log metric per device and scene
         for d in self.device_ids:
             dev_loss = outputs["devloss." + d].sum()
             dev_cnt = outputs["devcnt." + d].sum()
@@ -230,7 +230,7 @@ class PLModule(pl.LightningModule):
             logs["cnt." + l] = lbl_cnt
 
         logs["macro_avg_acc"] = torch.mean(torch.stack([logs["acc." + l] for l in self.label_ids]))
-        # prefix with 'val' for logging
+        # prefix with 'val' for logging'''
         self.log_dict({"val/" + k: logs[k] for k in logs})
         self.validation_step_outputs.clear()
 

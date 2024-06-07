@@ -207,7 +207,7 @@ class PLModule(pl.LightningModule):
         results = {'loss': samples_loss.mean(), "n_correct": n_correct,
                    "n_pred": torch.as_tensor(len(labels), device=self.device)}
 
-        # log metric per device and scene
+        '''# log metric per device and scene
         for d in self.device_ids:
             results["devloss." + d] = torch.as_tensor(0., device=self.device)
             results["devcnt." + d] = torch.as_tensor(0., device=self.device)
@@ -226,7 +226,7 @@ class PLModule(pl.LightningModule):
             results["lbln_correct." + self.label_ids[l]] = \
                 results["lbln_correct." + self.label_ids[l]] + n_correct_per_sample[i]
             results["lblcnt." + self.label_ids[l]] = results["lblcnt." + self.label_ids[l]] + 1
-        results = {k: v.detach() for k, v in results.items()}
+        results = {k: v.detach() for k, v in results.items()}'''
         self.validation_step_outputs.append(results)
 
     def on_validation_epoch_end(self):
@@ -243,7 +243,7 @@ class PLModule(pl.LightningModule):
 
         logs = {'acc': acc, 'loss': avg_loss}
 
-        # log metric per device and scene
+        '''# log metric per device and scene
         for d in self.device_ids:
             dev_loss = outputs["devloss." + d].sum()
             dev_cnt = outputs["devcnt." + d].sum()
@@ -269,7 +269,7 @@ class PLModule(pl.LightningModule):
             logs["cnt." + l] = lbl_cnt
 
         logs["macro_avg_acc"] = torch.mean(torch.stack([logs["acc." + l] for l in self.label_ids]))
-        # prefix with 'val' for logging
+        # prefix with 'val' for logging'''
         self.log_dict({"val/" + k: logs[k] for k in logs})
         self.validation_step_outputs.clear()
 
@@ -525,7 +525,7 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="DCASE24_Task1")
-    parser.add_argument('--experiment_name', type=str, default="FocusNet_Ali1_sub5_16BC_T_8BC_S_FMS")
+    parser.add_argument('--experiment_name', type=str, default="FocusNet_Ali1_sub5_8BC_T_16BC_S_FMS")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
 
@@ -554,7 +554,8 @@ if __name__ == '__main__':
     parser.add_argument('--weight_decay', type=float, default=0.0001)
     # parser.add_argument('--roll_sec', type=int, default=0)
     parser.add_argument('--roll_sec', type=int, default=0)  # roll waveform over time
-
+    parser.add_argument('--dir_prob', type=float, default=0)  # prob. to apply device impulse response augmentation
+    
     # peak learning rate (in cosine schedule)
     parser.add_argument('--lr', type=float, default=0.005) # can try 0.001
     parser.add_argument('--warmup_steps', type=int, default=100) # default = 2000, divide by 20 for 5% subset, 10 for 10%, 4 for 25%, 2 for 50%
