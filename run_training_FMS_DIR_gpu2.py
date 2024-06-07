@@ -9,13 +9,16 @@ import transformers
 import wandb
 import json
 
-from dataset.dcase24_dev import get_training_set, get_test_set, get_eval_set
+
+from torch.autograd import Variable
+from dataset.dcase24_dev_teacher import get_training_set, get_test_set, get_eval_set
 from helpers.init import worker_init_fn
 from models.baseline import get_model
-from helpers.utils import mixstyle
+from helpers.utils import mixstyle, mixup_data
 from helpers import nessi
 
 torch.set_float32_matmul_precision("high")
+
 class PLModule(pl.LightningModule):
     def __init__(self, config):
         super().__init__()
@@ -112,27 +115,36 @@ class PLModule(pl.LightningModule):
             "frequency": 1
         }
         return [optimizer], [lr_scheduler_config]
-
+    
     def training_step(self, train_batch, batch_idx):
         """
         :param train_batch: contains one batch from train dataloader
         :param batch_idx
         :return: loss to update model parameters
         """
-        x, files, labels, devices, cities = train_batch
+        criterion = torch.nn.CrossEntropyLoss()
+        def mixup_criterion(criterion, pred, y_a, y_b, lam):
+            return lam * criterion(pred, y_a) + (1 - lam) * criterion(pred, y_b)
+        x, files, labels, devices, cities, logits = train_batch
         x = self.mel_forward(x)  # we convert the raw audio signals into log mel spectrograms
         labels = labels.type(torch.LongTensor)
         labels = labels.to(device=x.device)
         if self.config.mixstyle_p > 0:
             # frequency mixstyle
             x = mixstyle(x, self.config.mixstyle_p, self.config.mixstyle_alpha)
+        inputs, targets_a, targets_b, lam = mixup_data(x, labels,
+                                                       self.config.mixup_alpha, use_cuda=True)
+        inputs, targets_a, targets_b = map(Variable, (inputs,
+                                                      targets_a, targets_b))
         y_hat = self.model(x.cuda())
-        samples_loss = F.cross_entropy(y_hat, labels, reduction="none")
-        loss = samples_loss.mean()
+        loss = mixup_criterion(criterion,y_hat, targets_a, targets_b, lam)
+        
+        # samples_loss = F.cross_entropy(y_hat, labels, reduction="none")
+        # loss = samples_loss.mean()
 
         self.log("lr", self.trainer.optimizers[0].param_groups[0]['lr'])
         self.log("epoch", self.current_epoch)
-        self.log("train/loss", loss.detach().cpu())
+        self.log("train/loss", loss.detach())
         return loss
 
     def on_train_epoch_end(self):
@@ -154,7 +166,7 @@ class PLModule(pl.LightningModule):
         results = {'loss': samples_loss.mean(), "n_correct": n_correct,
                    "n_pred": torch.as_tensor(len(labels), device=self.device)}
 
-        # log metric per device and scene
+        '''# log metric per device and scene
         for d in self.device_ids:
             results["devloss." + d] = torch.as_tensor(0., device=self.device)
             results["devcnt." + d] = torch.as_tensor(0., device=self.device)
@@ -173,7 +185,7 @@ class PLModule(pl.LightningModule):
             results["lbln_correct." + self.label_ids[l]] = \
                 results["lbln_correct." + self.label_ids[l]] + n_correct_per_sample[i]
             results["lblcnt." + self.label_ids[l]] = results["lblcnt." + self.label_ids[l]] + 1
-        results = {k: v.cpu() for k, v in results.items()}
+        results = {k: v.detach() for k, v in results.items()}'''
         self.validation_step_outputs.append(results)
 
     def on_validation_epoch_end(self):
@@ -190,7 +202,7 @@ class PLModule(pl.LightningModule):
 
         logs = {'acc': acc, 'loss': avg_loss}
 
-        # log metric per device and scene
+        '''# log metric per device and scene
         for d in self.device_ids:
             dev_loss = outputs["devloss." + d].sum()
             dev_cnt = outputs["devcnt." + d].sum()
@@ -216,7 +228,7 @@ class PLModule(pl.LightningModule):
             logs["cnt." + l] = lbl_cnt
 
         logs["macro_avg_acc"] = torch.mean(torch.stack([logs["acc." + l] for l in self.label_ids]))
-        # prefix with 'val' for logging
+        # prefix with 'val' for logging'''
         self.log_dict({"val/" + k: logs[k] for k in logs})
         self.validation_step_outputs.clear()
 
@@ -336,7 +348,7 @@ def train(config):
     assert config.subset in {100, 50, 25, 10, 5}, "Specify an integer value in: {100, 50, 25, 10, 5} to use one of " \
                                                   "the given subsets."
     roll_samples = config.orig_sample_rate * config.roll_sec
-    train_dl = DataLoader(dataset=get_training_set(config.subset, roll=roll_samples),
+    train_dl = DataLoader(dataset=get_training_set(config.subset, roll=roll_samples, dir_prob= config.dir_prob, resample_rate = config.sample_rate),
                           worker_init_fn=worker_init_fn,
                           num_workers=config.num_workers,
                           batch_size=config.batch_size,
@@ -363,10 +375,11 @@ def train(config):
     trainer = pl.Trainer(max_epochs=config.n_epochs,
                          logger=wandb_logger,
                          accelerator='gpu',
-                         devices=1,
+                         devices=[1],
                          num_sanity_val_steps=0,
                          precision=config.precision,
-                         callbacks=[pl.callbacks.ModelCheckpoint(save_last=True, monitor = "val/loss",save_top_k=1)])
+                         callbacks=[pl.callbacks.ModelCheckpoint(save_last=True, monitor = "val/loss",save_top_k=1)]
+                         )
     # start training and validation for the specified number of epochs
     trainer.fit(pl_module, train_dl, test_dl)
 
@@ -387,11 +400,7 @@ def evaluate(config):
     assert config.ckpt_id is not None, "A value for argument 'ckpt_id' must be provided."
     ckpt_dir = os.path.join(config.project_name, config.ckpt_id, "checkpoints")
     assert os.path.exists(ckpt_dir), f"No such folder: {ckpt_dir}"
-    # ckpt_file = os.path.join(ckpt_dir, "last.ckpt")
-    for file in os.listdir(ckpt_dir):
-        if "epoch" in file:
-            ckpt_file = os.path.join(ckpt_dir,file) # choosing the best model ckpt
-    # ckpt_file = os.path.join(ckpt_dir, "last.ckpt")
+    ckpt_file = os.path.join(ckpt_dir, "last.ckpt")
     assert os.path.exists(ckpt_file), f"No such file: {ckpt_file}. Implement your own mechanism to select" \
                                       f"the desired checkpoint."
 
@@ -404,7 +413,7 @@ def evaluate(config):
     pl_module = PLModule.load_from_checkpoint(ckpt_file, config=config)
     trainer = pl.Trainer(logger=False,
                          accelerator='gpu',
-                         devices=1,
+                         devices=[1],
                          precision=config.precision)
 
     # evaluate lightning module on development-test split
@@ -419,9 +428,9 @@ def evaluate(config):
     macs, params = nessi.get_torch_size(pl_module.model, input_size=shape)
 
     print(f"Model Complexity: MACs: {macs}, Params: {params}")
-    # assert macs <= nessi.MAX_MACS, "The model exceeds the MACs limit and must not be submitted to the challenge!"
-    # assert params <= nessi.MAX_PARAMS_MEMORY, \
-        # "The model exceeds the parameter limit and must not be submitted to the challenge!"
+    assert macs <= nessi.MAX_MACS, "The model exceeds the MACs limit and must not be submitted to the challenge!"
+    assert params <= nessi.MAX_PARAMS_MEMORY, \
+        "The model exceeds the parameter limit and must not be submitted to the challenge!"
 
     allowed_precision = int(nessi.MAX_PARAMS_MEMORY / params * 8)
     print(f"ATTENTION: According to the number of model parameters and the memory limits that apply in the challenge,"
@@ -444,8 +453,8 @@ def evaluate(config):
     # all filenames
     all_files = [item[len("audio/"):] for files, _ in predictions for item in files]
     # all predictions
-    logits = torch.cat([torch.as_tensor(p) for _, p in predictions], 0)
-    all_predictions = F.softmax(logits.float(), dim=1)
+    all_predictions = torch.cat([torch.as_tensor(p) for _, p in predictions], 0)
+    all_predictions = F.softmax(all_predictions.float(), dim=1)
 
     # write eval set predictions to csv file
     df = pd.read_csv(dataset_config['meta_csv'], sep="\t")
@@ -456,7 +465,7 @@ def evaluate(config):
     scene_labels = [class_names[i] for i in torch.argmax(all_predictions, dim=1)]
     df['scene_label'] = scene_labels
     for i, label in enumerate(class_names):
-        df[label] = logits[:, i]
+        df[label] = all_predictions[:, i]
     df = pd.DataFrame(df)
 
     # save eval set predictions, model state_dict and info to output folder
@@ -471,7 +480,7 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="DCASE24_Task1")
-    parser.add_argument('--experiment_name', type=str, default="Baseline_DSP_sub5_eval_16BC")
+    parser.add_argument('--experiment_name', type=str, default="Baseline_Ali_sub50_441K_FMS_DIR_Mixup_24_Channel")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
 
@@ -482,32 +491,36 @@ if __name__ == '__main__':
     # dataset
     # subset in {100, 50, 25, 10, 5}
     parser.add_argument('--orig_sample_rate', type=int, default=44100)
-    parser.add_argument('--subset', type=int, default=100)
+    parser.add_argument('--subset', type=int, default=50)
 
     # model
     parser.add_argument('--n_classes', type=int, default=10)  # classification model with 'n_classes' output neurons
     parser.add_argument('--in_channels', type=int, default=1)
     # adapt the complexity of the neural network (3 main dimensions to scale the baseline)
-    parser.add_argument('--base_channels', type=int, default=32)
+    parser.add_argument('--base_channels', type=int, default=24)
     parser.add_argument('--channels_multiplier', type=float, default=1.8)
     parser.add_argument('--expansion_rate', type=float, default=2.1)
 
     # training
     parser.add_argument('--n_epochs', type=int, default=150)
     parser.add_argument('--batch_size', type=int, default=256)
-    parser.add_argument('--mixstyle_p', type=float, default=0.4)  # frequency mixstyle
+    parser.add_argument('--mixstyle_p', type=float, default=0.4)  # defualt = 0.4, frequency mixstyle
     parser.add_argument('--mixstyle_alpha', type=float, default=0.3)
     parser.add_argument('--weight_decay', type=float, default=0.0001)
-    parser.add_argument('--roll_sec', type=int, default=0)  # roll waveform over time
+    parser.add_argument('--roll_sec', type=int, default=0)  # roll waveform over time, default = 0.1
+    parser.add_argument('--dir_prob', type=float, default=0.6)  # prob. to apply device impulse response augmentation
+    parser.add_argument('--mixup_alpha', type=float, default=1.0)
 
     # peak learning rate (in cosinge schedule)
     parser.add_argument('--lr', type=float, default=0.005)
-    parser.add_argument('--warmup_steps', type=int, default=0)
+    parser.add_argument('--warmup_steps', type=int, default=100) # default = 2000, divide by 20 for 5% subset, 10 for 10%, 4 for 25%, 2 for 50%
 
     # preprocessing
-    parser.add_argument('--sample_rate', type=int, default=44100)
+    parser.add_argument('--sample_rate', type=int, default=44100) #default = 32000
     parser.add_argument('--window_length', type=int, default=3072)  # in samples (corresponds to 96 ms)
+    # parser.add_argument('--window_length', type=int, default=4234)
     parser.add_argument('--hop_length', type=int, default=500)  # in samples (corresponds to ~16 ms)
+    # parser.add_argument('--hop_length', type=int, default=706)
     parser.add_argument('--n_fft', type=int, default=4096)  # length (points) of fft, e.g. 4096 point FFT
     parser.add_argument('--n_mels', type=int, default=256)  # number of mel bins
     parser.add_argument('--freqm', type=int, default=48)  # mask up to 'freqm' spectrogram bins
