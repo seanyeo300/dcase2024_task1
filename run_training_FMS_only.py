@@ -375,7 +375,7 @@ def train(config):
     trainer = pl.Trainer(max_epochs=config.n_epochs,
                          logger=wandb_logger,
                          accelerator='gpu',
-                         devices=[1],
+                         devices=1,
                          num_sanity_val_steps=0,
                          precision=config.precision,
                          callbacks=[pl.callbacks.ModelCheckpoint(save_last=True, monitor = "val/loss",save_top_k=1)]
@@ -413,7 +413,7 @@ def evaluate(config):
     pl_module = PLModule.load_from_checkpoint(ckpt_file, config=config)
     trainer = pl.Trainer(logger=False,
                          accelerator='gpu',
-                         devices=[1],
+                         devices=1,
                          precision=config.precision)
 
     # evaluate lightning module on development-test split

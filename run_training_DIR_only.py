@@ -229,6 +229,7 @@ class PLModule(pl.LightningModule):
 
         logs["macro_avg_acc"] = torch.mean(torch.stack([logs["acc." + l] for l in self.label_ids]))
         # prefix with 'val' for logging'''
+        # prefix with 'val' for logging'''
         self.log_dict({"val/" + k: logs[k] for k in logs})
         self.validation_step_outputs.clear()
 
@@ -375,7 +376,7 @@ def train(config):
     trainer = pl.Trainer(max_epochs=config.n_epochs,
                          logger=wandb_logger,
                          accelerator='gpu',
-                         devices=[1],
+                         devices=1,
                          num_sanity_val_steps=0,
                          precision=config.precision,
                          callbacks=[pl.callbacks.ModelCheckpoint(save_last=True, monitor = "val/loss",save_top_k=1)]
@@ -413,7 +414,7 @@ def evaluate(config):
     pl_module = PLModule.load_from_checkpoint(ckpt_file, config=config)
     trainer = pl.Trainer(logger=False,
                          accelerator='gpu',
-                         devices=[1],
+                         devices=1,
                          precision=config.precision)
 
     # evaluate lightning module on development-test split
@@ -480,7 +481,7 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="DCASE24_Task1")
-    parser.add_argument('--experiment_name', type=str, default="Baseline_Ali_sub50_441K_FMS_Mixup_32_Channel")
+    parser.add_argument('--experiment_name', type=str, default="Baseline_Ali_sub50_441K_DIR_32_channel")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
 
@@ -504,11 +505,11 @@ if __name__ == '__main__':
     # training
     parser.add_argument('--n_epochs', type=int, default=150)
     parser.add_argument('--batch_size', type=int, default=256)
-    parser.add_argument('--mixstyle_p', type=float, default=0.4)  # defualt = 0.4, frequency mixstyle
+    parser.add_argument('--mixstyle_p', type=float, default=0)  # defualt = 0.4, frequency mixstyle
     parser.add_argument('--mixstyle_alpha', type=float, default=0.3)
     parser.add_argument('--weight_decay', type=float, default=0.0001)
     parser.add_argument('--roll_sec', type=int, default=0)  # roll waveform over time, default = 0.1
-    parser.add_argument('--dir_prob', type=float, default=0)  # prob. to apply device impulse response augmentation , default 0.6
+    parser.add_argument('--dir_prob', type=float, default=0.6)  # prob. to apply device impulse response augmentation
     parser.add_argument('--mixup_alpha', type=float, default=1.0)
 
     # peak learning rate (in cosinge schedule)
