@@ -153,8 +153,8 @@ class PLModule(pl.LightningModule):
             teacher_logits = F.log_softmax(teacher_logits / self.config.temperature, dim=-1)
         kd_loss = self.kl_div_loss(y_hat_soft, teacher_logits).mean()
         kd_loss = kd_loss * (self.config.temperature ** 2)
-        # loss = self.config.kd_lambda * label_loss + (1 - self.config.kd_lambda) * kd_loss
-        loss = label_loss + kd_loss
+        loss = self.config.kd_lambda * label_loss + (1 - self.config.kd_lambda) * kd_loss
+        # loss = label_loss + kd_loss
         self.log("lr", self.trainer.optimizers[0].param_groups[0]['lr'])
         self.log("epoch", self.current_epoch)
         self.log("train/loss", loss.detach())
@@ -497,7 +497,7 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="DCASE24_Task1")
-    parser.add_argument('--experiment_name', type=str, default="DCASE24_Ensemble_KD_PaSST2Base_Ali1_sub5")
+    parser.add_argument('--experiment_name', type=str, default="DCASE24_Ensemble_KD_PaSST2Base_Ali1_sub100")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
 
@@ -508,7 +508,7 @@ if __name__ == '__main__':
     # dataset
     # subset in {100, 50, 25, 10, 5}
     parser.add_argument('--orig_sample_rate', type=int, default=44100)
-    parser.add_argument('--subset', type=int, default=5)
+    parser.add_argument('--subset', type=int, default=100)
 
     # model
     parser.add_argument('--n_classes', type=int, default=10)  # classification model with 'n_classes' output neurons
@@ -544,7 +544,7 @@ if __name__ == '__main__':
     parser.add_argument('--warmup_steps', type=int, default=100) # default = 2000, divide by 20 for 5% subset, 10 for 10%, 4 for 25%, 2 for 50%
     
     # preprocessing
-    parser.add_argument('--sample_rate', type=int, default=44100)
+    parser.add_argument('--sample_rate', type=int, default=32000)
     parser.add_argument('--window_length', type=int, default=3072)  # in samples (corresponds to 96 ms)
     parser.add_argument('--hop_length', type=int, default=500)  # in samples (corresponds to ~16 ms)
     parser.add_argument('--n_fft', type=int, default=4096)  # length (points) of fft, e.g. 4096 point FFT
