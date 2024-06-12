@@ -147,7 +147,7 @@ class PLModule(pl.LightningModule):
         # entropy_loss = F.cross_entropy(y_hat,softmax_y, reduction= "none")
         # dt = F.softmax(y_hat, -1) - F.softmax(teacher_logits, -1)
         # y_d = y_hat + dt
-        # loss_cls1 = F.cross_entropy(y_d,labels, reduction="mean", label_smoothing=0) # need to add label smoothing 0.1
+        # loss_cls1 = F.cross_entropy(y_d,labels, reduction="mean", label_smoothing=0) # need to add label smoothing 
         # one_hot_labels = F.one_hot(labels, num_classes=10)
         
         # multi_warm_lb = F.softmax(teacher_logits/2, -1) > 1.0/teacher_logits.size(-1)           # eqn(4)* see lab notebook

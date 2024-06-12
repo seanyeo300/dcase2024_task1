@@ -390,7 +390,8 @@ def evaluate(config):
     # ckpt_file = os.path.join(ckpt_dir, "last.ckpt")
     for file in os.listdir(ckpt_dir):
         if "epoch" in file:
-            ckpt_file = os.path.join(ckpt_dir,file) # choosing the best model ckpt
+            ckpt_file = os.path.join(ckpt_dir,file) # choosing the best model ckpt 
+            print(f"found ckpt file: {file}")
     # ckpt_file = os.path.join(ckpt_dir, "last.ckpt")
     assert os.path.exists(ckpt_file), f"No such file: {ckpt_file}. Implement your own mechanism to select" \
                                       f"the desired checkpoint."
@@ -404,7 +405,7 @@ def evaluate(config):
     pl_module = PLModule.load_from_checkpoint(ckpt_file, config=config)
     trainer = pl.Trainer(logger=False,
                          accelerator='gpu',
-                         devices=1,
+                         devices=[1],
                          precision=config.precision)
 
     # evaluate lightning module on development-test split
@@ -482,7 +483,7 @@ if __name__ == '__main__':
     # dataset
     # subset in {100, 50, 25, 10, 5}
     parser.add_argument('--orig_sample_rate', type=int, default=44100)
-    parser.add_argument('--subset', type=int, default=100)
+    parser.add_argument('--subset', type=int, default=10)
 
     # model
     parser.add_argument('--n_classes', type=int, default=10)  # classification model with 'n_classes' output neurons

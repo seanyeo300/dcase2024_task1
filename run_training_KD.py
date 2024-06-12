@@ -157,8 +157,12 @@ class PLModule(pl.LightningModule):
         # loss = label_loss + kd_loss
         self.log("lr", self.trainer.optimizers[0].param_groups[0]['lr'])
         self.log("epoch", self.current_epoch)
-        self.log("train/loss", loss.detach())
-        return loss
+        self.log("train/loss", loss)
+        results = {"loss": loss, "label_loss": label_loss * self.config.kd_lambda,
+                   "kd_loss": kd_loss * (1 - self.config.kd_lambda)}
+
+        return results
+        # return loss
 
     def on_train_epoch_end(self):
         pass
@@ -388,10 +392,10 @@ def train(config):
     trainer = pl.Trainer(max_epochs=config.n_epochs,
                          logger=wandb_logger,
                          accelerator='gpu',
-                         devices=1,
+                         devices=[1],
                          num_sanity_val_steps=0,
-                         precision=config.precision,
-                         callbacks=[pl.callbacks.ModelCheckpoint(save_last=True, monitor = "val/loss",save_top_k=1)]
+                         precision=config.precision, detect_anomaly=True,
+                         callbacks=[pl.callbacks.ModelCheckpoint(save_last=True, monitor = "val/loss",save_top_k=1),]
                          )
     # start training and validation for the specified number of epochs
     trainer.fit(pl_module, train_dl, test_dl)
@@ -430,7 +434,7 @@ def evaluate(config):
     pl_module = PLModule.load_from_checkpoint(ckpt_file, config=config)
     trainer = pl.Trainer(logger=False,
                          accelerator='gpu',
-                         devices=1,
+                         devices=[1],
                          precision=config.precision)
 
     # evaluate lightning module on development-test split
@@ -497,7 +501,7 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="DCASE24_Task1")
-    parser.add_argument('--experiment_name', type=str, default="DCASE24_Ensemble_KD_PaSST2Base_Ali1_sub100")
+    parser.add_argument('--experiment_name', type=str, default="DCASE24_KD_Ensemble2Base_Ali1_sub100_32K")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
 
@@ -527,6 +531,7 @@ if __name__ == '__main__':
     parser.add_argument('--weight_decay', type=float, default=0.0001)
     # parser.add_argument('--roll_sec', type=int, default=0)
     parser.add_argument('--roll_sec', type=int, default=0)  # roll waveform over time
+    parser.add_argument('--dir_prob', type=float, default=0.6)  # prob. to apply device impulse response augmentation
     
     ## knowledge distillation
     parser.add_argument('--temperature', type=float, default=2.0)

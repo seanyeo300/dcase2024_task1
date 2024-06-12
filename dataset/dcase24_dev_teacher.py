@@ -24,10 +24,10 @@ dataset_config = {
     "test_split_csv": "test.csv",
     "dirs_path": os.path.join("dataset", "dirs"),
     "eval_dir": os.path.join(dataset_dir), 
-    "eval_meta_csv": os.path.join(dataset_dir, "split100.csv"), # to get the full prediction list with index intact
+    "eval_meta_csv": os.path.join(dataset_dir, "meta.csv"), # to get the full prediction list with index intact
     # "logits_file": os.path.join("predictions","i3i3xf1x", "logits.pt")
     # "logits_file": os.path.join("predictions","ensemble", "ensemble_logits.pt") #specifies where the logit and predictions are stored. 
-    "logits_file": os.path.join("predictions","ensemble", "sub100_ensemble_logits.pt") # for small dataset
+    "logits_file": os.path.join("predictions","ensemble", "sub100_ensemble_6_logits.pt") # for small dataset
     # "eval_dir": os.path.join(dataset_dir, "TAU-urban-acoustic-scenes-2024-mobile-evaluation"), 
     # "eval_meta_csv": os.path.join(dataset_dir,  "TAU-urban-acoustic-scenes-2024-mobile-evaluation", "meta.csv")
 }
@@ -191,7 +191,7 @@ def get_training_set(split=100, roll=False, dir_prob=0,resample_rate=44100):
 def get_base_training_set(meta_csv, train_files_csv):
     meta = pd.read_csv(meta_csv, sep="\t")
     train_files = pd.read_csv(train_files_csv, sep='\t')['filename'].values.reshape(-1)
-    train_subset_indices = list(meta[meta['filename'].isin(train_files)].index)
+    train_subset_indices = list(meta[meta['filename'].isin(train_files)].index) # these indices pull from the meta.csv index, not the train_subset csv
     ds = SimpleSelectionDataset(BasicDCASE24Dataset(meta_csv),
                                 train_subset_indices)
     ds = AddLogitsDataset(ds, train_subset_indices, dataset_config['logits_file'])
