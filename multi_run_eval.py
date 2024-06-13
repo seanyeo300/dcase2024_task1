@@ -11,11 +11,11 @@ def run_multiple_scripts(scripts_with_args):
 if __name__ == "__main__":
     # Example: Replace these with your actual script names and arguments
     scripts_to_run = [
-        ('get_logits.py', ['--evaluate', '--ckpt_id', '3xlli7dq']),
-        ('get_logits.py', ['--evaluate', '--ckpt_id', '1e5ld4y6']),
-        ('get_logits.py', ['--evaluate', '--ckpt_id', 'gs5hm18o']),
-        ('get_logits.py', ['--evaluate', '--ckpt_id', 'nmwun6cs'])
-        # ('get_logits.py', ['--evaluate', '--ckpt_id', 'duy4puj8'])
+        ('run_training.py', ['--evaluate', '--ckpt_id', 'mqzabiyn']),
+        ('run_training.py', ['--evaluate', '--ckpt_id', 'p22qh0f4']),
+        ('run_training.py', ['--evaluate', '--ckpt_id', '1ctisl36']),
+        ('run_training.py', ['--evaluate', '--ckpt_id', 'o70ikpgn']),
+        ('run_training.py', ['--evaluate', '--ckpt_id', '75h28rxp'])
     ]
     run_multiple_scripts(scripts_to_run)
 #50%
@@ -26,3 +26,15 @@ if __name__ == "__main__":
 ['pw3jremw', 'baeix291', '7qouvmdh']    #done
 #5%
 ["nmwun6cs", "1e5ld4y6", "gs5hm18o"]
+
+##KD-Ensemble##
+#100%
+['mqzabiyn'] # done
+#50%
+['p22qh0f4']
+#25%
+['1ctisl36']
+#10%
+['o70ikpgn']
+# 5%
+['75h28rxp']
