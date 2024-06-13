@@ -490,7 +490,7 @@ if __name__ == '__main__':
     parser.add_argument('--n_classes', type=int, default=10)  # classification model with 'n_classes' output neurons
     parser.add_argument('--in_channels', type=int, default=1)
     # adapt the complexity of the neural network (3 main dimensions to scale the baseline)
-    parser.add_argument('--base_channels', type=int, default=24)
+    parser.add_argument('--base_channels', type=int, default=32)
     parser.add_argument('--channels_multiplier', type=float, default=1.8)
     parser.add_argument('--expansion_rate', type=float, default=2.1)
 
@@ -507,7 +507,7 @@ if __name__ == '__main__':
     parser.add_argument('--warmup_steps', type=int, default=100) # default = 2000, divide by 20 for 5% subset, 10 for 10%, 4 for 25%, 2 for 50%
 
     # preprocessing
-    parser.add_argument('--sample_rate', type=int, default=44100) #default = 32000
+    parser.add_argument('--sample_rate', type=int, default=32000) #default = 32000
     parser.add_argument('--window_length', type=int, default=3072)  # in samples (corresponds to 96 ms)
     # parser.add_argument('--window_length', type=int, default=4234)
     parser.add_argument('--hop_length', type=int, default=500)  # in samples (corresponds to ~16 ms)
