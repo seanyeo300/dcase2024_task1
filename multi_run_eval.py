@@ -11,11 +11,11 @@ def run_multiple_scripts(scripts_with_args):
 if __name__ == "__main__":
     # Example: Replace these with your actual script names and arguments
     scripts_to_run = [
-        ('get_logits.py', ['--evaluate', '--ckpt_id', 'p22qh0f4']),
-        ('get_logits.py', ['--evaluate', '--ckpt_id', '1ctisl36']),
-        ('get_logits.py', ['--evaluate', '--ckpt_id', 'o70ikpgn']),
-        ('get_logits.py', ['--evaluate', '--ckpt_id', '75h28rxp'])
-        # ('get_logits.py', ['--evaluate', '--ckpt_id', 'duy4puj8'])
+        ('run_training.py', ['--evaluate', '--ckpt_id', 'mqzabiyn']),
+        ('run_training.py', ['--evaluate', '--ckpt_id', 'p22qh0f4']),
+        ('run_training.py', ['--evaluate', '--ckpt_id', '1ctisl36']),
+        ('run_training.py', ['--evaluate', '--ckpt_id', 'o70ikpgn']),
+        ('run_training.py', ['--evaluate', '--ckpt_id', '75h28rxp'])
     ]
     run_multiple_scripts(scripts_to_run)
 #50%
