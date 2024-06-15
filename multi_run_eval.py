@@ -11,11 +11,11 @@ def run_multiple_scripts(scripts_with_args):
 if __name__ == "__main__":
     # Example: Replace these with your actual script names and arguments
     scripts_to_run = [
-        ('run_training.py', ['--evaluate', '--ckpt_id', 'mqzabiyn']),
-        ('run_training.py', ['--evaluate', '--ckpt_id', 'p22qh0f4']),
-        ('run_training.py', ['--evaluate', '--ckpt_id', '1ctisl36']),
-        ('run_training.py', ['--evaluate', '--ckpt_id', 'o70ikpgn']),
-        ('run_training.py', ['--evaluate', '--ckpt_id', '75h28rxp'])
+        ('run_training.py', ['--evaluate', '--ckpt_id', 'fu9y8b7i'])
+        # ('run_training.py', ['--evaluate', '--ckpt_id', 'yq3wx9fy'])
+        # ('run_training.py', ['--evaluate', '--ckpt_id', '1ctisl36']),
+        # ('run_training.py', ['--evaluate', '--ckpt_id', 'o70ikpgn']),
+        # ('run_training.py', ['--evaluate', '--ckpt_id', '75h28rxp'])
     ]
     run_multiple_scripts(scripts_to_run)
 #50%
@@ -31,7 +31,7 @@ if __name__ == "__main__":
 #100%
 ['mqzabiyn'] # done
 #50%
-['p22qh0f4']
+['fu9y8b7i'] # ['p22qh0f4']
 #25%
 ['1ctisl36']
 #10%
