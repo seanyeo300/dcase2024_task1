@@ -363,7 +363,7 @@ def train(config):
     trainer = pl.Trainer(max_epochs=config.n_epochs,
                          logger=wandb_logger,
                          accelerator='gpu',
-                         devices=[1],
+                         devices=1,
                          num_sanity_val_steps=0,
                          precision=config.precision,
                          callbacks=[pl.callbacks.ModelCheckpoint(save_last=True, monitor = "val/loss",save_top_k=1)]
@@ -406,7 +406,7 @@ def evaluate(config):
     pl_module = PLModule.load_from_checkpoint(ckpt_file, config=config)
     trainer = pl.Trainer(logger=False,
                          accelerator='gpu',
-                         devices=[1],
+                         devices=1,
                          precision=config.precision)
 
     # evaluate lightning module on development-test split
@@ -473,7 +473,7 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="DCASE24_Task1")
-    parser.add_argument('--experiment_name', type=str, default="Baseline_Ali1_sub25_32000")
+    parser.add_argument('--experiment_name', type=str, default="Baseline_Ali1_sub100_44100_FMS")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
 
@@ -484,7 +484,7 @@ if __name__ == '__main__':
     # dataset
     # subset in {100, 50, 25, 10, 5}
     parser.add_argument('--orig_sample_rate', type=int, default=44100)
-    parser.add_argument('--subset', type=int, default=25)
+    parser.add_argument('--subset', type=int, default=100)
 
     # model
     parser.add_argument('--n_classes', type=int, default=10)  # classification model with 'n_classes' output neurons
@@ -500,11 +500,11 @@ if __name__ == '__main__':
     parser.add_argument('--mixstyle_p', type=float, default=0.4)  # frequency mixstyle
     parser.add_argument('--mixstyle_alpha', type=float, default=0.3)
     parser.add_argument('--weight_decay', type=float, default=0.0001)
-    parser.add_argument('--roll_sec', type=int, default=0.1)  # roll waveform over time, default = 0.1
+    parser.add_argument('--roll_sec', type=int, default=0)  # roll waveform over time, default = 0.1
 
     # peak learning rate (in cosinge schedule)
     parser.add_argument('--lr', type=float, default=0.005)
-    parser.add_argument('--warmup_steps', type=int, default=2000) # default = 2000, divide by 20 for 5% subset, 10 for 10%, 4 for 25%, 2 for 50%
+    parser.add_argument('--warmup_steps', type=int, default=100) # default = 2000, divide by 20 for 5% subset, 10 for 10%, 4 for 25%, 2 for 50%
 
     # preprocessing
     parser.add_argument('--sample_rate', type=int, default=32000) #default = 32000
