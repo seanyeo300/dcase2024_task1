@@ -11,7 +11,7 @@ import json
 import torch.nn as nn
 
 from helpers.lr_schedule import exp_warmup_linear_down
-from dataset.dcase24_dev_teacher import get_training_set, get_test_set, get_eval_set
+from dataset.dcase24_dev_teacher_10 import get_training_set, get_test_set, get_eval_set
 from helpers.init import worker_init_fn
 from models.baseline import get_model
 from helpers.utils import mixstyle
@@ -525,7 +525,7 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="DCASE24_Task1")
-    parser.add_argument('--experiment_name', type=str, default="DCASE24_KD_Ensemble2Base_Ali1_sub5_lmda_cosine_sch_LR005")
+    parser.add_argument('--experiment_name', type=str, default="DCASE24_KDF_Ensemble2Base_Ali1_sub5")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
 
@@ -572,7 +572,7 @@ if __name__ == '__main__':
     parser.add_argument('--warmup_steps', type=int, default=0) # default = 2000, divide by 20 for 5% subset, 10 for 10%, 4 for 25%, 2 for 50%
     
     # preprocessing
-    parser.add_argument('--sample_rate', type=int, default=44100)
+    parser.add_argument('--sample_rate', type=int, default=32000)
     parser.add_argument('--window_length', type=int, default=3072)  # in samples (corresponds to 96 ms)
     parser.add_argument('--hop_length', type=int, default=500)  # in samples (corresponds to ~16 ms)
     parser.add_argument('--n_fft', type=int, default=4096)  # length (points) of fft, e.g. 4096 point FFT

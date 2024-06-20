@@ -389,7 +389,7 @@ def train(config):
     assert config.subset in {100, 50, 25, 10, 5}, "Specify an integer value in: {100, 50, 25, 10, 5} to use one of " \
                                                   "the given subsets."
     roll_samples = config.orig_sample_rate * config.roll_sec
-    train_dl = DataLoader(dataset=get_training_set(config.subset, roll=roll_samples),
+    train_dl = DataLoader(dataset=get_training_set(config.subset, roll=roll_samples,dir_prob=config.dir_prob),
                           worker_init_fn=worker_init_fn,
                           num_workers=config.num_workers,
                           batch_size=config.batch_size,
@@ -525,7 +525,7 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="DCASE24_Task1")
-    parser.add_argument('--experiment_name', type=str, default="FocusNet_Ali1_sub100_ensemble_T_32BC_S_FMS_DIR_32K")
+    parser.add_argument('--experiment_name', type=str, default="FocusNet_Ali1_sub100_32BCBL_T_32BC_S_FMS_DIR_32K")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
 
