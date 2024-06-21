@@ -525,7 +525,7 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="DCASE24_Task1")
-    parser.add_argument('--experiment_name', type=str, default="DCASE24_KD_Ensemble2Base_Ali1_sub5_lmda_cosine_sch_LR005")
+    parser.add_argument('--experiment_name', type=str, default="DCASE24_KDF_Ensemble2Base_Ali1_sub5_lmda=0.025")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
 
@@ -558,7 +558,7 @@ if __name__ == '__main__':
     
     ## knowledge distillation
     parser.add_argument('--temperature', type=float, default=2.0)
-    parser.add_argument('--kd_lambda', type=float, default=0.02) # default is 0.02
+    parser.add_argument('--kd_lambda', type=float, default=0.025) # default is 0.02
     
     #learning rate for KD
     # parser.add_argument('--lr', type=float, default=0.001)
@@ -572,7 +572,7 @@ if __name__ == '__main__':
     parser.add_argument('--warmup_steps', type=int, default=0) # default = 2000, divide by 20 for 5% subset, 10 for 10%, 4 for 25%, 2 for 50%
     
     # preprocessing
-    parser.add_argument('--sample_rate', type=int, default=44100)
+    parser.add_argument('--sample_rate', type=int, default=32000)
     parser.add_argument('--window_length', type=int, default=3072)  # in samples (corresponds to 96 ms)
     parser.add_argument('--hop_length', type=int, default=500)  # in samples (corresponds to ~16 ms)
     parser.add_argument('--n_fft', type=int, default=4096)  # length (points) of fft, e.g. 4096 point FFT
