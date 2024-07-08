@@ -3,3 +3,5 @@ wandb/
 *.pyc
 h5py_audio_wav
 h5py_mel_256bins
+h5py_audio_eval_wav
+h5py_mic_wav_1

@@ -11,7 +11,7 @@ import json
 
 
 from torch.autograd import Variable
-from dataset.dcase24_dev_teacher import ntu_get_training_set, ntu_get_training_set_dir, ntu_get_test_set, open_h5, close_h5
+from dataset.dcase24_ntu_teacher import ntu_get_training_set_dir, ntu_get_test_set, ntu_get_eval_set, open_h5, close_h5
 from helpers.init import worker_init_fn
 from models.baseline import get_model
 from helpers.utils import mixstyle, mixup_data
@@ -353,8 +353,9 @@ def train(config):
     # get pointer to h5 file containing audio samples
     hf_in = open_h5('h5py_audio_wav')
     hmic_in = open_h5('h5py_mic_wav_1')
-    roll_samples = config.orig_sample_rate * config.roll_sec
-    train_dl = DataLoader(dataset=ntu_get_training_set_dir(config.subset, config.dir_p, hf_in, hmic_in),               
+    
+    # get training set already as logic to handle dir_prob=0
+    train_dl = DataLoader(dataset=ntu_get_training_set_dir(config.subset, config.dir_prob, hf_in, hmic_in),               
                           worker_init_fn=worker_init_fn,
                           num_workers=config.num_workers,
                           batch_size=config.batch_size,
@@ -389,11 +390,11 @@ def train(config):
                          )
     # start training and validation for the specified number of epochs
     trainer.fit(pl_module, train_dl, test_dl)
-
-    # final test step
-    # here: use the validation split
     trainer.test(ckpt_path='best', dataloaders=test_dl)
 
+    # close file pointer to h5 file 
+    close_h5(hf_in)
+    close_h5(hmic_in)
     wandb.finish()
 
 
@@ -416,6 +417,9 @@ def evaluate(config):
     out_dir = os.path.join("predictions", config.ckpt_id)
     os.makedirs(out_dir, exist_ok=True)
 
+    # Open h5 file once
+    hf_in = open_h5('h5py_audio_wav')
+    eval_hf = open_h5('h5py_audio_eval_wav')
     # load lightning module from checkpoint
     pl_module = PLModule.load_from_checkpoint(ckpt_file, config=config)
     trainer = pl.Trainer(logger=False,
@@ -424,10 +428,11 @@ def evaluate(config):
                          precision=config.precision)
 
     # evaluate lightning module on development-test split
-    test_dl = DataLoader(dataset=get_test_set(),
+    test_dl = DataLoader(dataset=ntu_get_test_set(hf_in),
                          worker_init_fn=worker_init_fn,
                          num_workers=config.num_workers,
-                         batch_size=config.batch_size)
+                         batch_size=config.batch_size,
+                         pin_memory=True)
 
     # get model complexity from nessi
     sample = next(iter(test_dl))[0][0].unsqueeze(0).to(pl_module.device)
@@ -451,7 +456,7 @@ def evaluate(config):
     info['test'] = res
 
     # generate predictions on evaluation set
-    eval_dl = DataLoader(dataset=get_eval_set(),
+    eval_dl = DataLoader(dataset=ntu_get_eval_set(eval_hf),
                          worker_init_fn=worker_init_fn,
                          num_workers=config.num_workers,
                          batch_size=config.batch_size)
@@ -487,7 +492,7 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="DCASE24_Task1")
-    parser.add_argument('--experiment_name', type=str, default="Baseline_Ali_sub25_441K_DIR_FMS_Mixup_test_24_channel")
+    parser.add_argument('--experiment_name', type=str, default="Baseline_Ali_sub100_32K_DIR_FMS_Mixup_test_32_channel_h5speedtest")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
 
@@ -498,7 +503,7 @@ if __name__ == '__main__':
     # dataset
     # subset in {100, 50, 25, 10, 5}
     parser.add_argument('--orig_sample_rate', type=int, default=44100)
-    parser.add_argument('--subset', type=int, default=25)
+    parser.add_argument('--subset', type=int, default=100)
 
     # model
     parser.add_argument('--n_classes', type=int, default=10)  # classification model with 'n_classes' output neurons
@@ -523,7 +528,7 @@ if __name__ == '__main__':
     parser.add_argument('--warmup_steps', type=int, default=100) # default = 2000, divide by 20 for 5% subset, 10 for 10%, 4 for 25%, 2 for 50%
 
     # preprocessing
-    parser.add_argument('--sample_rate', type=int, default=44100) #default = 32000
+    parser.add_argument('--sample_rate', type=int, default=32000) #default = 32000
     parser.add_argument('--window_length', type=int, default=3072)  # in samples (corresponds to 96 ms)
     # parser.add_argument('--window_length', type=int, default=4234)
     parser.add_argument('--hop_length', type=int, default=500)  # in samples (corresponds to ~16 ms)

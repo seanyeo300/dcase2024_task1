@@ -10,6 +10,7 @@ import numpy as np
 import librosa
 from scipy.signal import convolve
 import pathlib
+import h5py
 
 dataset_dir = "D:\Sean\DCASE\datasets\Extract_to_Folder\TAU-urban-acoustic-scenes-2022-mobile-development"
 assert dataset_dir is not None, "Specify 'TAU Urban Acoustic Scenes 2022 Mobile dataset' location in variable " \
@@ -31,6 +32,34 @@ dataset_config = {
     # "eval_dir": os.path.join(dataset_dir, "TAU-urban-acoustic-scenes-2024-mobile-evaluation"), 
     # "eval_meta_csv": os.path.join(dataset_dir,  "TAU-urban-acoustic-scenes-2024-mobile-evaluation", "meta.csv")
 }
+class DirDataset(TorchDataset):
+    """
+   Augments Waveforms with a Device Impulse Response (DIR)
+    """
+
+    def __init__(self, ds, hmic, dir_p):
+        self.ds = ds
+        self.hmic = hmic
+        self.dir_p = dir_p
+
+    def __getitem__(self, index):
+        x, file, label, device, city = self.ds[index]
+
+        self.device = device
+
+        # New devices are created using device A + impulse function + DRC
+        if self.device == 'a' and self.dir_p > np.random.rand():
+            # choose a DIR at random
+            dir_idx = str(int(np.random.randint(0, len(self.hmic))))
+            dir = torch.from_numpy(self.hmic.get(dir_idx)[()])  
+            # get audio file with 'new' mic response
+            x = convolve(x, dir, 'full')[:, :x.shape[1]]
+            x = torch.from_numpy(x)
+        return x, file, label, device, city
+
+    def __len__(self):
+        return len(self.ds)  
+
 class DIRAugmentDataset(TorchDataset):
     """
    Augments Waveforms with a Device Impulse Response (DIR)
@@ -170,6 +199,7 @@ def load_dirs(dirs_path, resample_rate):
         return sig
 
     return [process_func(p) for p in all_paths]
+
 def get_training_set(split=100, roll=False, dir_prob=0,resample_rate=44100):
     assert str(split) in ("5", "10", "25", "50", "100"), "Parameters 'split' must be in [5, 10, 25, 50, 100]"
     os.makedirs(dataset_config['split_path'], exist_ok=True)
@@ -251,22 +281,9 @@ def get_base_eval_set(meta_csv, eval_dir):
     ds = BasicDCASE24EvalDataset(meta_csv, eval_dir)
     return ds
 
-def ntu_get_training_set_dir(split=100, dir_prob = False, hf_in=None, hmic_in=None):
-    assert str(split) in ("5", "10", "25", "50", "100"), "Parameters 'split' must be in [5, 10, 25, 50, 100]"
-    os.makedirs(dataset_config['split_path'], exist_ok=True)
-    subset_fname = f"split{split}.csv"
-    subset_split_file = os.path.join(dataset_config['split_path'], subset_fname)
-    if not os.path.isfile(subset_split_file):
-        # download split{x}.csv (file containing all audio snippets for respective development-train split)
-        subset_csv_url = dataset_config['split_url'] + subset_fname
-        print(f"Downloading file: {subset_fname}")
-        download_url_to_file(subset_csv_url, subset_split_file)
-    ds = ntu_get_base_training_set(dataset_config['meta_csv'], subset_split_file, hf_in)
-    if dir_prob:
-        ds = DirDataset(ds, hmic_in, dir_prob)
-    return ds
 
 ############ implementation of I/O op reduction ###################
+
 class BasicDCASE24Dataseth5(TorchDataset):
     """
     Basic DCASE'24 Dataset: loads mel data from files
@@ -291,8 +308,25 @@ class BasicDCASE24Dataseth5(TorchDataset):
         return sig, self.files[index], self.labels[index], self.devices[index], self.cities[index]
 
     def __len__(self):
-        return len(self.files)   
-def ntu_get_base_training_set(meta_csv, train_files_csv, hf_in):
+        return len(self.files)
+    
+def ntu_get_training_set_dir(split=100, dir_prob = False, hf_in=None, hmic_in=None): # this variant is for DIR augmentation
+    assert str(split) in ("5", "10", "25", "50", "100"), "Parameters 'split' must be in [5, 10, 25, 50, 100]"
+    os.makedirs(dataset_config['split_path'], exist_ok=True)
+    subset_fname = f"split{split}.csv"
+    subset_split_file = os.path.join(dataset_config['split_path'], subset_fname)
+    if not os.path.isfile(subset_split_file):
+        # download split{x}.csv (file containing all audio snippets for respective development-train split)
+        subset_csv_url = dataset_config['split_url'] + subset_fname
+        print(f"Downloading file: {subset_fname}")
+        download_url_to_file(subset_csv_url, subset_split_file)
+    ds = ntu_get_base_training_set(dataset_config['meta_csv'], subset_split_file, hf_in)
+    if dir_prob:
+        ds = DirDataset(ds, hmic_in, dir_prob)
+    return ds
+
+
+def ntu_get_base_training_set(meta_csv, train_files_csv, hf_in): # this variant does not use DIR augmentation
     meta = pd.read_csv(meta_csv, sep="\t")
     train_files = pd.read_csv(train_files_csv, sep='\t')['filename'].values.reshape(-1)
     train_subset_indices = list(meta[meta['filename'].isin(train_files)].index)
@@ -317,3 +351,43 @@ def ntu_get_base_test_set(meta_csv, test_files_csv, hf_in):
     test_indices = list(meta[meta['filename'].isin(test_files)].index)
     ds = SimpleSelectionDataset(BasicDCASE24Dataseth5(meta_csv, hf_in), test_indices)
     return ds
+
+class BasicDCASE24EvalDataseth5(TorchDataset):
+    """
+    Basic DCASE'24 Dataset: loads eval data from files
+    """
+
+    def __init__(self, meta_csv, hf_in):
+        """
+        @param meta_csv: meta csv file for the dataset
+        @param eval_dir: directory containing evaluation set
+        return: waveform, file
+        """
+        df = pd.read_csv(meta_csv, sep="\t")
+        self.files = df[['filename']].values.reshape(-1)
+        self.hf_in = hf_in
+        #self.eval_dir = eval_dir
+
+    def __getitem__(self, index):
+        mel_sig_ds = self.files[index]
+        sig = torch.from_numpy(self.hf_in.get(mel_sig_ds)[()])          
+        return sig, self.files[index]
+
+    def __len__(self):
+        return len(self.files)
+    
+def ntu_get_eval_set(hf_in):
+    assert os.path.exists(dataset_config['eval_dir']), f"No such folder: {dataset_config['eval_dir']}"
+    ds = ntu_get_base_eval_set(dataset_config['eval_meta_csv'], hf_in)
+    return ds
+
+def ntu_get_base_eval_set(meta_csv, hf_in):
+    ds = BasicDCASE24EvalDataseth5(meta_csv, hf_in)
+    return ds
+
+def open_h5(h5_file):
+    hf_in =h5py.File(h5_file, 'r')
+    return hf_in
+
+def close_h5(hf_in):
+    hf_in.close()    
