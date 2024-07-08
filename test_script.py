@@ -1,3 +1,5 @@
+#### This is the script to generate h5 files provided by Joseph####
+
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
 # import torch
