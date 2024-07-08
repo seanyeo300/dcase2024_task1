@@ -1,3 +1,5 @@
 dcase24.py
 wandb/
 *.pyc
+h5py_audio_wav
+h5py_mel_256bins
