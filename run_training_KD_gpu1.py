@@ -11,7 +11,7 @@ import json
 import torch.nn as nn
 
 from helpers.lr_schedule import exp_warmup_linear_down
-from dataset.dcase24_dev_teacher_100 import get_training_set, get_test_set, get_eval_set
+from dataset.dcase24_dev_teacher_10 import get_training_set, get_test_set, get_eval_set
 from helpers.init import worker_init_fn
 from models.baseline import get_model
 from helpers.utils import mixstyle
@@ -502,7 +502,7 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="DCASE24_Task1")
-    parser.add_argument('--experiment_name', type=str, default="DCASE24_KD_Ensemble2Base_Ali1_sub100_FMS_DIR_32K")
+    parser.add_argument('--experiment_name', type=str, default="DCASE24_KD_Pansemble2Base_Ali1_sub5_FMS_DIR_32K")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
 
@@ -513,7 +513,7 @@ if __name__ == '__main__':
     # dataset
     # subset in {100, 50, 25, 10, 5}
     parser.add_argument('--orig_sample_rate', type=int, default=44100)
-    parser.add_argument('--subset', type=int, default=100)
+    parser.add_argument('--subset', type=int, default=5)
 
     # model
     parser.add_argument('--n_classes', type=int, default=10)  # classification model with 'n_classes' output neurons

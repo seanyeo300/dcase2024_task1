@@ -525,7 +525,7 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="DCASE24_Task1")
-    parser.add_argument('--experiment_name', type=str, default="FocusNet_Ali1_sub100_ensemble_T_32BC_S_FMS_DIR_32K")
+    parser.add_argument('--experiment_name', type=str, default="TFS-S_Ali1_sub5_BCBLensemble_T_32BC_S_FMS_DIR_32K")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
 
@@ -536,7 +536,7 @@ if __name__ == '__main__':
     # dataset
     # subset in {100, 50, 25, 10, 5}
     parser.add_argument('--orig_sample_rate', type=int, default=44100)
-    parser.add_argument('--subset', type=int, default=100)
+    parser.add_argument('--subset', type=int, default=5)
 
     # model
     parser.add_argument('--n_classes', type=int, default=10)  # classification model with 'n_classes' output neurons
@@ -557,7 +557,7 @@ if __name__ == '__main__':
     parser.add_argument('--dir_prob', type=float, default=0.6)  # prob. to apply device impulse response augmentation
     
     # peak learning rate (in cosine schedule)
-    parser.add_argument('--lr', type=float, default=0.005) # can try 0.001
+    parser.add_argument('--lr', type=float, default=0.005) # default=0.005
     parser.add_argument('--warmup_steps', type=int, default=100) # default = 2000, divide by 20 for 5% subset, 10 for 10%, 4 for 25%, 2 for 50%
 
     # preprocessing

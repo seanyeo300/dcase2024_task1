@@ -525,7 +525,7 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="DCASE24_Task1")
-    parser.add_argument('--experiment_name', type=str, default="DCASE24_KDF_Ensemble2Base_Ali1_sub5_lmda=0.025")
+    parser.add_argument('--experiment_name', type=str, default="DCASE24_KDF_Ensemble2Base_Ali1_sub5_lmda=0.028")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
 
@@ -558,7 +558,7 @@ if __name__ == '__main__':
     
     ## knowledge distillation
     parser.add_argument('--temperature', type=float, default=2.0)
-    parser.add_argument('--kd_lambda', type=float, default=0.025) # default is 0.02
+    parser.add_argument('--kd_lambda', type=float, default=0.028) # default is 0.02
     
     #learning rate for KD
     # parser.add_argument('--lr', type=float, default=0.001)
