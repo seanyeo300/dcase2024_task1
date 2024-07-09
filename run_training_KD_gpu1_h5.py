@@ -412,7 +412,8 @@ def train(config):
     # final test step
     # here: use the validation split
     trainer.test(ckpt_path='best', dataloaders=test_dl)
-
+    
+    ############ h5 edit end #################
     # close file pointer to h5 file 
     close_h5(hf_in)
     close_h5(hmic_in)
