@@ -354,7 +354,7 @@ def train(config):
     hf_in = open_h5('h5py_audio_wav')
     hmic_in = open_h5('h5py_mic_wav_1')
     
-    # get training set already as logic to handle dir_prob=0
+    # get_training set already as logic to handle dir_prob=0
     train_dl = DataLoader(dataset=ntu_get_training_set_dir(config.subset, config.dir_prob, hf_in, hmic_in),               
                           worker_init_fn=worker_init_fn,
                           num_workers=config.num_workers,
@@ -395,6 +395,7 @@ def train(config):
     # close file pointer to h5 file 
     close_h5(hf_in)
     close_h5(hmic_in)
+
     wandb.finish()
 
 
@@ -485,14 +486,15 @@ def evaluate(config):
     torch.save(pl_module.model.state_dict(), os.path.join(out_dir, "model_state_dict.pt"))
     with open(os.path.join(out_dir, "info.json"), "w") as json_file:
         json.dump(info, json_file)
-
+    close_h5(hf_in)
+    close_h5(eval_hf)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='DCASE 24 argument parser')
 
     # general
     parser.add_argument('--project_name', type=str, default="DCASE24_Task1")
-    parser.add_argument('--experiment_name', type=str, default="Baseline_Ali_sub100_32K_DIR_FMS_Mixup_test_32_channel_h5speedtest")
+    parser.add_argument('--experiment_name', type=str, default="Baseline_Ali_sub5_32K_DIR_FMS_Mixup_test_32_channel_h5speedtest")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
 
@@ -503,7 +505,7 @@ if __name__ == '__main__':
     # dataset
     # subset in {100, 50, 25, 10, 5}
     parser.add_argument('--orig_sample_rate', type=int, default=44100)
-    parser.add_argument('--subset', type=int, default=100)
+    parser.add_argument('--subset', type=int, default=5)
 
     # model
     parser.add_argument('--n_classes', type=int, default=10)  # classification model with 'n_classes' output neurons
