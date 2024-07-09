@@ -475,7 +475,7 @@ def evaluate(config):
     # all filenames
     all_files = [item[len("audio/"):] for files, _ in predictions for item in files]
     # all predictions
-    all_predictions = torch.cat([torch.as_tensor(p) for _, p in predictions], 0)
+    logits = torch.cat([torch.as_tensor(p) for _, p in predictions], 0)
     all_predictions = F.softmax(all_predictions, dim=1)
 
     # write eval set predictions to csv file
@@ -487,7 +487,7 @@ def evaluate(config):
     scene_labels = [class_names[i] for i in torch.argmax(all_predictions, dim=1)]
     df['scene_label'] = scene_labels
     for i, label in enumerate(class_names):
-        df[label] = all_predictions[:, i]
+        df[label] = logits[:, i]
     df = pd.DataFrame(df)
 
     # save eval set predictions, model state_dict and info to output folder
