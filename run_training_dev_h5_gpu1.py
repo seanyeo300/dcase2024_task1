@@ -118,6 +118,7 @@ class PLModule(pl.LightningModule):
     
     def mixup_criterion(self,criterion, pred, y_a, y_b, lam):
             return lam * criterion(pred, y_a) + (1 - lam) * criterion(pred, y_b)
+            
     
     def training_step(self, train_batch, batch_idx):
         """
@@ -139,7 +140,7 @@ class PLModule(pl.LightningModule):
         inputs, targets_a, targets_b = map(Variable, (inputs,
                                                       targets_a, targets_b))
         y_hat = self.model(x.cuda())
-        loss = self.mixup_criterion(criterion,y_hat, targets_a, targets_b, lam)
+        loss = self.mixup_criterion(criterion, y_hat, targets_a, targets_b, lam)
         
         # samples_loss = F.cross_entropy(y_hat, labels, reduction="none")
         # loss = samples_loss.mean()
@@ -383,7 +384,7 @@ def train(config):
     trainer = pl.Trainer(max_epochs=config.n_epochs,
                          logger=wandb_logger,
                          accelerator='gpu',
-                         devices=1,
+                         devices=[0],
                          num_sanity_val_steps=0,
                          precision=config.precision,
                          callbacks=[pl.callbacks.ModelCheckpoint(save_last=True, monitor = "val/loss",save_top_k=1)]
@@ -425,7 +426,7 @@ def evaluate(config):
     pl_module = PLModule.load_from_checkpoint(ckpt_file, config=config)
     trainer = pl.Trainer(logger=False,
                          accelerator='gpu',
-                         devices=1,
+                         devices=[0],
                          precision=config.precision)
 
     # evaluate lightning module on development-test split
@@ -494,7 +495,7 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="DCASE24_Task1")
-    parser.add_argument('--experiment_name', type=str, default="Baseline_Ali_sub5_32K_DIR_FMS_Mixup_test_32_channel_h5speedtest")
+    parser.add_argument('--experiment_name', type=str, default="Baseline_Ali_sub5_32K_DIR_FMS_32_channel_h5_Mixup_test")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
 
