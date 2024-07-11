@@ -10,5 +10,5 @@ def run_multiple_scripts(script_names):
 
 if __name__ == "__main__":
     # Example: Replace these with your actual script names
-    scripts_to_run = ['run_training_dev_h5_gpu1.py','run_training_dev_h5_gpu1.py','run_training_dev_h5_gpu2.py', 'run_training_dev_h5_gpu2.py','run_training_dev_h5_gpu2.py']
+    scripts_to_run = ['run_training_KD_gpu1_h5.py','run_training_KD_gpu1_h5.py','run_training_KD_gpu1_h5.py']
     run_multiple_scripts(scripts_to_run)
