@@ -154,7 +154,7 @@ class PLModule(pl.LightningModule):
         kd_loss = self.kl_div_loss(y_hat_soft, teacher_logits).mean()
         kd_loss = kd_loss * (self.config.temperature ** 2)
         loss = self.config.kd_lambda * label_loss + (1 - self.config.kd_lambda) * kd_loss
-        # loss = label_loss + kd_loss
+        # loss = kd_loss
         self.log("lr", self.trainer.optimizers[0].param_groups[0]['lr'])
         self.log("epoch", self.current_epoch)
         self.log("train/loss", loss)
@@ -524,8 +524,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='DCASE 24 argument parser')
 
     # general
-    parser.add_argument('--project_name', type=str, default="DCASE24_Task1")
-    parser.add_argument('--experiment_name', type=str, default="DCASE24_KD_6Pansemble2Base_Ali1_sub5_FMS_DIR_32K")
+    parser.add_argument('--project_name', type=str, default="NTU_DCASE24_Task1")
+    parser.add_argument('--experiment_name', type=str, default="DCASE24_KD_4FocusEnsemble2Base_Ali1_sub5_FMS_DIR_32K_KLloss")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
 

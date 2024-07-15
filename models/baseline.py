@@ -202,6 +202,7 @@ class Network(nn.Module):
         x = self._forward_conv(x)
         x = self.feed_forward(x)
         logits = x.squeeze(2).squeeze(2)
+        
         return logits
 
 

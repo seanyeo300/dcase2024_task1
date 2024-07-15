@@ -106,7 +106,6 @@ class Network(nn.Module):
         channels_per_stage = [base_channels] + [make_divisible(base_channels * channels_multiplier ** stage_id, 8)
                                                 for stage_id in range(n_stages)]
         self.total_block_count = 0
-        
         self.in_c = nn.Sequential(
             Conv2dNormActivation(in_channels,
                                  channels_per_stage[0] // 4,
@@ -123,7 +122,7 @@ class Network(nn.Module):
                                  inplace=False
                                  ),
         )
-        self.linear = nn.Linear(29952, 128)
+
         self.stages = nn.Sequential()
         for stage_id in range(n_stages):
             stage = self._make_stage(channels_per_stage[stage_id],
@@ -135,7 +134,24 @@ class Network(nn.Module):
             self.stages.add_module(f"s{stage_id + 1}", stage)
 
         ff_list = []
-        ff_list += [nn.Conv2d(
+        # ff_list += [nn.Conv2d(
+        #     channels_per_stage[-1],
+        #     n_classes,
+        #     kernel_size=(1, 1),
+        #     stride=(1, 1),
+        #     padding=0,
+        #     bias=False),
+        #     nn.BatchNorm2d(n_classes),
+        # ]
+        ff_list = [
+            nn.AdaptiveAvgPool2d((1, 1)),
+            nn.Flatten(),
+            nn.Linear(channels_per_stage[-1], 2048),
+            nn.ReLU(),
+            nn.Linear(2048, 128)
+        ]
+        z_list = []
+        z_list += [nn.Conv2d(
             channels_per_stage[-1],
             n_classes,
             kernel_size=(1, 1),
@@ -145,7 +161,12 @@ class Network(nn.Module):
             nn.BatchNorm2d(n_classes),
         ]
 
-        ff_list.append(nn.AdaptiveAvgPool2d((1, 1)))
+        z_list.append(nn.AdaptiveAvgPool2d((1, 1)))
+
+        self.z_forward = nn.Sequential(
+            *z_list
+        )
+        # ff_list.append(nn.AdaptiveAvgPool2d((1, 1)))
 
         self.feed_forward = nn.Sequential(
             *ff_list
@@ -201,13 +222,14 @@ class Network(nn.Module):
 
     def forward(self, x):
         x = self._forward_conv(x)
-        # print(x.size())
-        embedding = torch.flatten(x, 1)  # Flatten the output of the last convolutional layer
-        # print(embedding.size())
-        embedding = self.linear(embedding)
-        x = self.feed_forward(x)
-        logits = x.squeeze(2).squeeze(2)
-        return logits, embedding
+        z = self.z_forward(x) # performs the vanilla feed forward
+        x = self.feed_forward(x) # projection layer to get embeddings
+        z = z.squeeze(2).squeeze(2)
+        # print(f"after ffList: {x}")
+        # print(x.shape)
+        logits, embed = z, x
+        
+        return logits, embed
 
 
 def get_model(n_classes=10, in_channels=1, base_channels=32, channels_multiplier=2.3, expansion_rate=3.0,
