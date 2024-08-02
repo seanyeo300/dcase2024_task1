@@ -11,21 +11,27 @@ def run_multiple_scripts(scripts_with_args):
 if __name__ == "__main__":
     # Example: Replace these with your actual script names and arguments
     scripts_to_run = [
-        ('run_training.py', ['--evaluate', '--ckpt_id', 'fu9y8b7i'])
-        # ('run_training.py', ['--evaluate', '--ckpt_id', 'yq3wx9fy'])
-        # ('run_training.py', ['--evaluate', '--ckpt_id', '1ctisl36']),
-        # ('run_training.py', ['--evaluate', '--ckpt_id', 'o70ikpgn']),
-        # ('run_training.py', ['--evaluate', '--ckpt_id', '75h28rxp'])
+        ('get_logits.py', ['--evaluate', '--ckpt_id', '1o0lgb4u']),
+        ('get_logits.py', ['--evaluate', '--ckpt_id', 'dhrckv13']),
+        ('get_logits.py', ['--evaluate', '--ckpt_id', 'l521lxpv'])
+        # ('get_logits.py', ['--evaluate', '--ckpt_id', '4zesr7bt'])
+        # ('get_logits.py', ['--evaluate', '--ckpt_id', 'fm67hz2c'])
     ]
     run_multiple_scripts(scripts_to_run)
+
+###32-BCBL@44.1K models###
 #50%
-["3xlli7dq"]#, "wpu6shc2", "8cbb6x4v"]
+["3xlli7dq", "wpu6shc2", "8cbb6x4v"]
 #25%
 ["b9ooz0ks", "dksmk72n", "29rio0lo"]    #done  
 #10%
 ['pw3jremw', 'baeix291', '7qouvmdh']    #done
 #5%
 ["nmwun6cs", "1e5ld4y6", "gs5hm18o"]
+
+####24-BCBL@44.1K models####
+['1o0lgb4u','dhrckv13','l521lxpv']
+
 
 ##KD-Ensemble##
 #100%
@@ -38,3 +44,15 @@ if __name__ == "__main__":
 ['o70ikpgn']
 # 5%
 ['75h28rxp']
+
+# 100% 32-BCBL 44.1K
+['dj5zbrid']
+
+#100% KD-Ensemble models
+['mqzabiyn','fgw3yxt3','wyqwic3z']
+# 100% TFS models
+['100i1zrj','4zesr7bt','fm67hz2c']
+# 5% KD-Ensemble models
+["cxmze167","g7r7w32o","75h28rxp"]
+# 5% TFS models
+["6y1hmlfp", "a7zqm9g8", "o67k7os1"]

@@ -483,13 +483,13 @@ if __name__ == '__main__':
     # dataset
     # subset in {100, 50, 25, 10, 5}
     parser.add_argument('--orig_sample_rate', type=int, default=44100)
-    parser.add_argument('--subset', type=int, default=10)
+    parser.add_argument('--subset', type=int, default=5)
 
     # model
     parser.add_argument('--n_classes', type=int, default=10)  # classification model with 'n_classes' output neurons
     parser.add_argument('--in_channels', type=int, default=1)
     # adapt the complexity of the neural network (3 main dimensions to scale the baseline)
-    parser.add_argument('--base_channels', type=int, default=32)
+    parser.add_argument('--base_channels', type=int, default=24)
     parser.add_argument('--channels_multiplier', type=float, default=1.8)
     parser.add_argument('--expansion_rate', type=float, default=2.1)
 
