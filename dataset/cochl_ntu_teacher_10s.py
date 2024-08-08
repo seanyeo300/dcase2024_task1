@@ -11,9 +11,10 @@ import librosa
 from scipy.signal import convolve
 import pathlib
 import h5py
+from torch.utils.data import Subset
 
 # dataset_dir = r"D:\Sean\DCASE\datasets\Extract_to_Folder\TAU-urban-acoustic-scenes-2022-mobile-development" # Alibaba
-dataset_dir = r"F:\CochlScene\1s" # DSP
+dataset_dir = r"F:\CochlScene" # DSP
 assert dataset_dir is not None, "Specify 'TAU Urban Acoustic Scenes 2022 Mobile dataset' location in variable " \
                                 "'dataset_dir'. The dataset can be downloaded from this URL:" \
                                 " https://zenodo.org/record/6337421"
@@ -294,6 +295,7 @@ class BasicDCASE24Dataseth5(TorchDataset):
     def __init__(self, meta_csv, hf_in):
         """
         @param meta_csv: meta csv file for the dataset
+        @param hdf5_file: path to the HDF5 file containing the audio data
         return: waveform, file, label, device and city
         """
         df = pd.read_csv(meta_csv, sep="\t")
@@ -304,37 +306,56 @@ class BasicDCASE24Dataseth5(TorchDataset):
         self.files = df[['filename']].values.reshape(-1)
         self.hf_in = hf_in
 
-    def __getitem__(self, index):
-        mel_sig_ds = self.files[index][5:-4]
-        sig = torch.from_numpy(self.hf_in.get(mel_sig_ds)[()])  
-        return sig, self.files[index], self.labels[index], self.devices[index], self.cities[index]
-
     def __len__(self):
         return len(self.files)
+
+    def __getitem__(self, index):
+        mel_sig_ds = self.files[index][5:-4]
+        # Debugging: Print the extracted dataset key
+        # print("Extracted dataset key:", mel_sig_ds)
+
+        # Check if the dataset key exists in the HDF5 file
+        if mel_sig_ds not in self.hf_in:
+            raise KeyError(f"Dataset with key '{mel_sig_ds}' not found in HDF5 file.")
+
+        # Retrieve the dataset
+        dataset = self.hf_in.get(mel_sig_ds)
+
+        # Debugging: Check if the dataset is None
+        if dataset is None:
+            raise ValueError(f"Dataset with key '{mel_sig_ds}' is None.")
+
+        # Print the shape of the dataset
+        # print("Dataset shape:", dataset.shape)
+
+        sig = torch.from_numpy(dataset[()])
+
+        return sig, self.files[index], self.labels[index], self.devices[index], self.cities[index]
+
+        # sig = torch.from_numpy(self.hf_in.get(mel_sig_ds)[()])
+        # return sig, self.files[index], self.labels[index], self.devices[index], self.cities[index]
     
-def ntu_get_training_set_dir(split=100, dir_prob = False, hf_in=None, hmic_in=None): # this variant is for DIR augmentation
-    assert str(split) in ("5", "10", "25", "50", "100","cochl"), "Parameters 'split' must be in [5, 10, 25, 50, 100]"
+def ntu_get_training_set_dir(split=100, dir_prob=False, hdf5_file=None, hmic_in=None):
+    assert str(split) in ("5", "10", "25", "50", "100", "cochl"), "Parameters 'split' must be in [5, 10, 25, 50, 100]"
     os.makedirs(dataset_config['split_path'], exist_ok=True)
     subset_fname = f"split{split}.csv"
     subset_split_file = os.path.join(dataset_config['split_path'], subset_fname)
     if not os.path.isfile(subset_split_file):
-        # download split{x}.csv (file containing all audio snippets for respective development-train split)
+        # Download split{x}.csv (file containing all audio snippets for respective development-train split)
         subset_csv_url = dataset_config['split_url'] + subset_fname
         print(f"Downloading file: {subset_fname}")
         download_url_to_file(subset_csv_url, subset_split_file)
-    ds = ntu_get_base_training_set(dataset_config['meta_csv'], subset_split_file, hf_in)
+    ds = ntu_get_base_training_set(dataset_config['meta_csv'], subset_split_file, hdf5_file)
     if dir_prob:
         ds = DirDataset(ds, hmic_in, dir_prob)
     return ds
 
 
-def ntu_get_base_training_set(meta_csv, train_files_csv, hf_in): # this variant does not use DIR augmentation
+def ntu_get_base_training_set(meta_csv, train_files_csv, hdf5_file):
     meta = pd.read_csv(meta_csv, sep="\t")
     train_files = pd.read_csv(train_files_csv, sep='\t')['filename'].values.reshape(-1)
     train_subset_indices = list(meta[meta['filename'].isin(train_files)].index)
-    ds = SimpleSelectionDataset(BasicDCASE24Dataseth5(meta_csv, hf_in),
-                                train_subset_indices)
-    # ds = AddLogitsDataset(ds, train_subset_indices, dataset_config['logits_file'])
+    ds = Subset(BasicDCASE24Dataseth5(meta_csv, hdf5_file), train_subset_indices)
     return ds
 
 def ntu_get_test_set(hf_in = None):
