@@ -6,7 +6,8 @@ h5py_mel_256bins
 h5py_audio_eval_wav
 h5py_mic_wav_1
 *.ckpt
-*h5py_cochl
+h5py_cochl_train_mel_10s
+h5py_cochl_val_mel_10s
 h5py_cochl_wav
 h5py_audio_wav2
 *model_state_dict.pt
