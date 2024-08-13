@@ -25,6 +25,7 @@ dataset_config = {
     "split_path": "split_setup",
     "split_url": "https://github.com/CPJKU/dcase2024_task1_baseline/releases/download/files/",
     "test_split_csv": "val_cochl.csv",
+    "cochl_test_split_csv": "test_cochl.csv",
     "dirs_path": os.path.join("dataset", "dirs"),
     "eval_dir": os.path.join(dataset_dir), 
     "eval_meta_csv": os.path.join(dataset_dir, "meta.csv"), # to get the full prediction list with index intact
@@ -365,6 +366,16 @@ def ntu_get_test_set(hf_in = None):
         # download test.csv (file containing all audio snippets for development-test split)
         test_csv_url = dataset_config['split_url'] + dataset_config['test_split_csv']
         print(f"Downloading file: {dataset_config['test_split_csv']}")
+        download_url_to_file(test_csv_url, test_split_csv)
+    ds = ntu_get_base_test_set(dataset_config['meta_csv'], test_split_csv, hf_in)
+    return ds
+def ntu_get_test_set_cochl(hf_in = None):
+    os.makedirs(dataset_config['split_path'], exist_ok=True)
+    test_split_csv = os.path.join(dataset_config['split_path'], dataset_config['cochl_test_split_csv'])
+    if not os.path.isfile(test_split_csv):
+        # download test.csv (file containing all audio snippets for development-test split)
+        test_csv_url = dataset_config['split_url'] + dataset_config['cochl_test_split_csv']
+        print(f"Downloading file: {dataset_config['cochl_test_split_csv']}")
         download_url_to_file(test_csv_url, test_split_csv)
     ds = ntu_get_base_test_set(dataset_config['meta_csv'], test_split_csv, hf_in)
     return ds
