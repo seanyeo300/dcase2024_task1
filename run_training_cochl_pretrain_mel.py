@@ -133,18 +133,18 @@ class PLModule(pl.LightningModule):
         x = self.mel_forward(x)  # we convert the raw audio signals into log mel spectrograms
         labels = labels.type(torch.LongTensor)
         labels = labels.to(device=x.device)
-        if self.config.mixstyle_p > 0:
-            # frequency mixstyle
-            x = mixstyle(x, self.config.mixstyle_p, self.config.mixstyle_alpha)
-        inputs, targets_a, targets_b, lam = mixup_data(x, labels,
-                                                       self.config.mixup_alpha, use_cuda=True)
-        inputs, targets_a, targets_b = map(Variable, (inputs,
-                                                      targets_a, targets_b))
+        # if self.config.mixstyle_p > 0:
+        #     # frequency mixstyle
+        #     x = mixstyle(x, self.config.mixstyle_p, self.config.mixstyle_alpha)
+        # inputs, targets_a, targets_b, lam = mixup_data(x, labels,
+        #                                                self.config.mixup_alpha, use_cuda=True)
+        # inputs, targets_a, targets_b = map(Variable, (inputs,
+        #                                               targets_a, targets_b))
         y_hat = self.model(x.cuda())
-        loss = self.mixup_criterion(criterion, y_hat, targets_a, targets_b, lam)
+        # loss = self.mixup_criterion(criterion, y_hat, targets_a, targets_b, lam)
         
-        # samples_loss = F.cross_entropy(y_hat, labels, reduction="none")
-        # loss = samples_loss.mean()
+        samples_loss = F.cross_entropy(y_hat, labels, reduction="none")
+        loss = samples_loss.mean()
 
         self.log("lr", self.trainer.optimizers[0].param_groups[0]['lr'])
         self.log("epoch", self.current_epoch)
