@@ -76,6 +76,8 @@ dataset_dir = r"F:\CochlScene"
 # eval_csv = r"F:\DCASE\2024\Datasets\TAU-urban-acoustic-scenes-2024-mobile-evaluation\evaluation_setup\fold1_test.csv"
 eval_csv = r"F:\Github\dcase2024_task1\split_setup\val_cochl.csv"
 # eval_dir = r"F:\DCASE\2024\Datasets\TAU-urban-acoustic-scenes-2024-mobile-evaluation"
+test_csv = r"F:\Github\dcase2024_task1\split_setup\test_cochl.csv"
+# eval_dir = r"F:\DCASE\2024\Datasets\TAU-urban-acoustic-scenes-2024-mobile-evaluation"
 
 
 dataset_config = {
@@ -115,11 +117,11 @@ mel = torchaudio.transforms.MelSpectrogram(
 # hf.close()
 
 # Create mel chunked HDF5 file
-df = pd.read_csv(meta_csv, sep="\t")
+df = pd.read_csv(test_csv, sep="\t")
 train_files = pd.read_csv(train_files_csv, sep='\t')['filename'].values.reshape(-1)
 files = df['filename'].values.reshape(-1)
 
-hf = h5py.File('h5py_cochl_train_mel_10s', 'w')
+hf = h5py.File('h5py_cochl_test_mel_10s', 'w')
 for file_idx in tqdm(range(len(files))):
     sig, _ = torchaudio.load(os.path.join(dataset_dir, files[file_idx]))
     mel_sig = mel(sig)
