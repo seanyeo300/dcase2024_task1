@@ -524,8 +524,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='DCASE 24 argument parser')
 
     # general
-    parser.add_argument('--project_name', type=str, default="NTU_DCASE24_Task1")
-    parser.add_argument('--experiment_name', type=str, default="DCASE24_KD_4FocusEnsemble2Base_Ali1_sub5_FMS_DIR_32K_KLloss")
+    parser.add_argument('--project_name', type=str, default="NTU24_ASC_BCBL")
+    parser.add_argument('--experiment_name', type=str, default="NTU_Var6-T_32BCBL-S_sub5_FMS_32K")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
 
@@ -555,7 +555,7 @@ if __name__ == '__main__':
     parser.add_argument('--weight_decay', type=float, default=0.0001)
     # parser.add_argument('--roll_sec', type=int, default=0)
     parser.add_argument('--roll_sec', type=int, default=0)  # roll waveform over time
-    parser.add_argument('--dir_prob', type=float, default=0.6)  # prob. to apply device impulse response augmentation
+    parser.add_argument('--dir_prob', type=float, default=0)  # prob. to apply device impulse response augmentation default = 0.6
     
     ## knowledge distillation
     parser.add_argument('--temperature', type=float, default=2.0)
