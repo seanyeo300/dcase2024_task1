@@ -13,4 +13,5 @@ h5py_cochl_wav
 h5py_audio_wav2
 *model_state_dict.pt
 *.json
-
+h5py_cochl10_256bins
+h5py_TAU22_128bins

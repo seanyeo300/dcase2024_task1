@@ -8,8 +8,8 @@ import torch.nn.functional as F
 import transformers
 import wandb
 import json
-
-
+import os
+import torch.nn as nn
 from torch.autograd import Variable
 from dataset.dcase24_ntu_teacher import ntu_get_training_set_dir, ntu_get_test_set, ntu_get_eval_set, open_h5, close_h5
 from helpers.init import worker_init_fn
@@ -19,6 +19,10 @@ from helpers import nessi
 
 torch.set_float32_matmul_precision("high")
 
+def load_and_modify_checkpoint(pl_module,num_classes=10):
+        # Modify the feed-forward layers to match the new number of classes
+    pl_module.model.feed_forward[0] = nn.Conv2d(104, num_classes, kernel_size=1)
+    pl_module.model.feed_forward[1] = nn.BatchNorm2d(num_classes)
 class PLModule(pl.LightningModule):
     def __init__(self, config):
         super().__init__()
@@ -336,7 +340,6 @@ class PLModule(pl.LightningModule):
 
         return files, y_hat
 
-
 def train(config):
     # logging is done using wandb
     wandb_logger = WandbLogger(
@@ -369,8 +372,17 @@ def train(config):
                          batch_size=config.batch_size,
                          pin_memory=True)
     # create pytorch lightening module
-    pl_module = PLModule(config)
-
+    ckpt_dir = os.path.join(config.project_name, config.ckpt_id, "checkpoints")
+    assert os.path.exists(ckpt_dir), f"No such folder: {ckpt_dir}"
+    #ckpt_file = os.path.join(ckpt_dir, "last.ckpt")
+    for file in os.listdir(ckpt_dir):
+        if "epoch" in file:
+            ckpt_file = os.path.join(ckpt_dir,file) # choosing the best model ckpt
+            print(f"found ckpt file: {file}")
+    
+    # pl_module = PLModule(config)
+    pl_module = PLModule.load_from_checkpoint(ckpt_file, config=config)
+    pl_module = load_and_modify_checkpoint(pl_module, num_classes=10)
     # get model complexity from nessi and log results to wandb
     sample = next(iter(test_dl))[0][0].unsqueeze(0)
     shape = pl_module.mel_forward(sample).size()
@@ -494,25 +506,25 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='DCASE 24 argument parser')
 
     # general
-    parser.add_argument('--project_name', type=str, default="DCASE24_Task1")
-    parser.add_argument('--experiment_name', type=str, default="Baseline_Ali_sub100_32K_DIR_FMS_32_channel_h5_Mixup_test")
+    parser.add_argument('--project_name', type=str, default="ICASSP_BCBL_Task1")
+    parser.add_argument('--experiment_name', type=str, default="sBCBL_sub5_32K_32_channel_h5_SeqFT_Mixup_FMS_DIR")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
 
     # evaluation
     parser.add_argument('--evaluate', action='store_true')  # predictions on eval set
-    parser.add_argument('--ckpt_id', type=str, default=None)  # for loading trained model, corresponds to wandb id
+    parser.add_argument('--ckpt_id', type=str, default='tgathd7f')  # for loading trained model, corresponds to wandb id
 
     # dataset
     # subset in {100, 50, 25, 10, 5}
     parser.add_argument('--orig_sample_rate', type=int, default=44100)
-    parser.add_argument('--subset', type=int, default=100)
+    parser.add_argument('--subset', type=int, default=5)
 
     # model
-    parser.add_argument('--n_classes', type=int, default=10)  # classification model with 'n_classes' output neurons
+    parser.add_argument('--n_classes', type=int, default=13)  # classification model with 'n_classes' output neurons
     parser.add_argument('--in_channels', type=int, default=1)
     # adapt the complexity of the neural network (3 main dimensions to scale the baseline)
-    parser.add_argument('--base_channels', type=int, default=24)
+    parser.add_argument('--base_channels', type=int, default=32)
     parser.add_argument('--channels_multiplier', type=float, default=1.8)
     parser.add_argument('--expansion_rate', type=float, default=2.1)
 

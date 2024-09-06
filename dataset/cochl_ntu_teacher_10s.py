@@ -14,7 +14,8 @@ import h5py
 from torch.utils.data import Subset
 
 # dataset_dir = r"D:\Sean\DCASE\datasets\Extract_to_Folder\TAU-urban-acoustic-scenes-2022-mobile-development" # Alibaba
-dataset_dir = r"F:\CochlScene" # DSP
+# dataset_dir = r"F:\CochlScene" # DSP
+dataset_dir = r"D:\Sean\CochlScene" #ALI
 assert dataset_dir is not None, "Specify 'TAU Urban Acoustic Scenes 2022 Mobile dataset' location in variable " \
                                 "'dataset_dir'. The dataset can be downloaded from this URL:" \
                                 " https://zenodo.org/record/6337421"
@@ -337,7 +338,7 @@ class BasicDCASE24Dataseth5(TorchDataset):
         # return sig, self.files[index], self.labels[index], self.devices[index], self.cities[index]
     
 def ntu_get_training_set_dir(split=100, dir_prob=False, hdf5_file=None, hmic_in=None):
-    assert str(split) in ("5", "10", "25", "50", "100", "cochl"), "Parameters 'split' must be in [5, 10, 25, 50, 100]"
+    assert str(split) in ("5", "10", "25", "50", "100", "cochl10s"), "Parameters 'split' must be in [5, 10, 25, 50, 100]"
     os.makedirs(dataset_config['split_path'], exist_ok=True)
     subset_fname = f"split{split}.csv"
     subset_split_file = os.path.join(dataset_config['split_path'], subset_fname)
