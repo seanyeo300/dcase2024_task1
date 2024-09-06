@@ -15,3 +15,4 @@ h5py_audio_wav2
 *.json
 h5py_cochl10_256bins
 h5py_TAU22_128bins
+h5py_cochl_train_mel_10s_128bins
