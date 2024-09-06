@@ -62,13 +62,13 @@ class PLModule(pl.LightningModule):
                                expansion_rate=config.expansion_rate
                                )
 
-        self.device_ids = ['a', 'b', 'c', 's1', 's2', 's3', 's4', 's5', 's6']
-        self.label_ids = ['airport', 'bus', 'metro', 'metro_station', 'park', 'public_square', 'shopping_mall',
-                          'street_pedestrian', 'street_traffic', 'tram']
+        # self.device_ids = ['a', 'b', 'c', 's1', 's2', 's3', 's4', 's5', 's6']
+        self.label_ids = ['Bus', 'Cafe', 'Car', 'CrowdedIndoor', 'Elevator', 'Kitchen',
+                          'Park', 'ResidentialArea', 'Restaurant', 'Restroom', 'Street','SubwayStation', 'Subway']
         # categorization of devices into 'real', 'seen' and 'unseen'
-        self.device_groups = {'a': "real", 'b': "real", 'c': "real",
-                              's1': "seen", 's2': "seen", 's3': "seen",
-                              's4': "unseen", 's5': "unseen", 's6': "unseen"}
+        # self.device_groups = {'a': "real", 'b': "real", 'c': "real",
+        #                       's1': "seen", 's2': "seen", 's3': "seen",
+        #                       's4': "unseen", 's5': "unseen", 's6': "unseen"}
 
         # pl 2 containers:
         self.training_step_outputs = []
@@ -83,7 +83,7 @@ class PLModule(pl.LightningModule):
         # x = self.mel(x)
         if self.training:
             x = self.mel_augment(x)
-        x = (x + 1e-5).log()
+        # x = (x + 1e-5).log()
         return x
 
     def forward(self, x):
@@ -130,17 +130,19 @@ class PLModule(pl.LightningModule):
         
         # x, files, labels, devices, cities, logits = train_batch
         x, files, labels, devices, cities = train_batch
-        x = self.mel_forward(x)  # we convert the raw audio signals into log mel spectrograms
+        x = self.mel_forward(x)  # we process the mel spectrograms
         labels = labels.type(torch.LongTensor)
         labels = labels.to(device=x.device)
-        # if self.config.mixstyle_p > 0:
+        if self.config.mixstyle_p > 0:
         #     # frequency mixstyle
-        #     x = mixstyle(x, self.config.mixstyle_p, self.config.mixstyle_alpha)
+            x = mixstyle(x, self.config.mixstyle_p, self.config.mixstyle_alpha)
         # inputs, targets_a, targets_b, lam = mixup_data(x, labels,
         #                                                self.config.mixup_alpha, use_cuda=True)
         # inputs, targets_a, targets_b = map(Variable, (inputs,
         #                                               targets_a, targets_b))
         y_hat = self.model(x.cuda())
+        
+        
         # loss = self.mixup_criterion(criterion, y_hat, targets_a, targets_b, lam)
         
         samples_loss = F.cross_entropy(y_hat, labels, reduction="none")
@@ -349,11 +351,11 @@ def train(config):
     )
 
     # train dataloader
-    assert config.subset in {100, 50, 25, 10, 5,"cochl"}, "Specify an integer value in: {100, 50, 25, 10, 5} to use one of " \
+    assert config.subset in {100, 50, 25, 10, 5,"cochl10s"}, "Specify an integer value in: {100, 50, 25, 10, 5} to use one of " \
                                                   "the given subsets."
 
     # get pointer to h5 file containing audio samples
-    hf_in = open_h5('h5py_cochl_train_mel_10s')
+    hf_in = open_h5('h5py_cochl10_256bins')
     hmic_in = open_h5('h5py_mic_wav_1')
 
     # get_training set already as logic to handle dir_prob=0
@@ -506,7 +508,7 @@ if __name__ == '__main__':
     # general
     # parser.add_argument('--project_name', type=str, default="DCASE24_Task1")
     parser.add_argument('--project_name', type=str, default="NTU24_ASC")
-    parser.add_argument('--experiment_name', type=str, default="NTU_cochlpretrain_test")
+    parser.add_argument('--experiment_name', type=str, default="NTU_BCBL_cochl_FT_h5")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
 
@@ -518,7 +520,7 @@ if __name__ == '__main__':
     # subset in {100, 50, 25, 10, 5}
     parser.add_argument('--orig_sample_rate', type=int, default=44100)
     # parser.add_argument('--subset', type=int, default=5)
-    parser.add_argument('--subset', default="cochl")
+    parser.add_argument('--subset', default="cochl10s")
 
     # model
     parser.add_argument('--n_classes', type=int, default=13)  # classification model with 'n_classes' output neurons
@@ -529,7 +531,7 @@ if __name__ == '__main__':
     parser.add_argument('--expansion_rate', type=float, default=2.1)
 
     # training
-    parser.add_argument('--n_epochs', type=int, default=1)
+    parser.add_argument('--n_epochs', type=int, default=150)
     parser.add_argument('--batch_size', type=int, default=256)
     parser.add_argument('--mixstyle_p', type=float, default=0.4)  # frequency mixstyle
     parser.add_argument('--mixstyle_alpha', type=float, default=0.3)
