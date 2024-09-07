@@ -23,6 +23,56 @@ def load_and_modify_checkpoint(pl_module,num_classes=10):
         # Modify the feed-forward layers to match the new number of classes
     pl_module.model.feed_forward[0] = nn.Conv2d(104, num_classes, kernel_size=1)
     pl_module.model.feed_forward[1] = nn.BatchNorm2d(num_classes)
+    return pl_module
+
+def load_and_modify_state_dict(ckpt_file):
+    # Load the checkpoint into a dictionary
+    checkpoint = torch.load(ckpt_file)
+    
+    # Extract the state dict from the checkpoint
+    state_dict = checkpoint['state_dict']
+    if state_dict is None:
+        raise ValueError("Checkpoint does not contain 'state_dict'.")
+    print("State dict loaded successfully.")
+    # Check if 'mel.0.kernel' key is missing and add it if necessary
+    if 'mel.0.kernel' not in state_dict:
+        print("Adding missing 'mel.0.kernel' key with tensor size [320, 1, 459].")
+        state_dict['mel.0.kernel'] = torch.randn([320, 1, 459])  # Create a random tensor with the correct size
+    
+    # Modify feed-forward layers to match the new number of classes
+    # state_dict['model.feed_forward.0.weight'] = torch.randn([num_classes, 104, 1, 1])
+    # state_dict['model.feed_forward.1.weight'] = torch.ones([num_classes])
+    # state_dict['model.feed_forward.1.bias'] = torch.zeros([num_classes])
+    # state_dict['model.feed_forward.1.running_mean'] = torch.zeros([num_classes])
+    # state_dict['model.feed_forward.1.running_var'] = torch.ones([num_classes])
+    
+    return state_dict
+def load_modified_checkpoint_into_pl_module(ckpt_file, config):
+    # Load and modify the state dict from the checkpoint file
+    modified_state_dict = load_and_modify_state_dict(ckpt_file)
+    
+    # Initialize the Lightning module
+    pl_module = PLModule(config=config)
+    if pl_module is None:
+        print("pl_module is None when intializing on config")
+    else:
+        print("pl_module initialized successfully.")
+    pl_module.load_state_dict(modified_state_dict)
+    if pl_module is None:
+        print("pl_module is None during load_state_dict")
+    else:
+        print("pl_module initialized successfully.")
+    # Load the modified state dict into the Lightning module
+    pl_module = load_and_modify_checkpoint(pl_module, num_classes=10)
+    if pl_module is None:
+        print("Final check: pl_module is None when modifying FF layers")
+    else:
+        print("Final check: pl_module initialized successfully.")
+    
+    
+    
+    return pl_module
+
 class PLModule(pl.LightningModule):
     def __init__(self, config):
         super().__init__()
@@ -381,8 +431,8 @@ def train(config):
             print(f"found ckpt file: {file}")
     
     # pl_module = PLModule(config)
-    pl_module = PLModule.load_from_checkpoint(ckpt_file, config=config)
-    pl_module = load_and_modify_checkpoint(pl_module, num_classes=10)
+    pl_module = load_modified_checkpoint_into_pl_module(ckpt_file, config=config)
+    
     # get model complexity from nessi and log results to wandb
     sample = next(iter(test_dl))[0][0].unsqueeze(0)
     shape = pl_module.mel_forward(sample).size()
