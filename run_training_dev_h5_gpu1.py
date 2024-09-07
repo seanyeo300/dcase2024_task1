@@ -16,13 +16,16 @@ from helpers.init import worker_init_fn
 from models.baseline import get_model
 from helpers.utils import mixstyle, mixup_data
 from helpers import nessi
-
+from models.baseline import initialize_weights
 torch.set_float32_matmul_precision("high")
 
 def load_and_modify_checkpoint(pl_module,num_classes=10):
         # Modify the feed-forward layers to match the new number of classes
     pl_module.model.feed_forward[0] = nn.Conv2d(104, num_classes, kernel_size=1)
     pl_module.model.feed_forward[1] = nn.BatchNorm2d(num_classes)
+    # Initialize the weights of the modified layers
+    pl_module.model.feed_forward[0].apply(initialize_weights)
+    pl_module.model.feed_forward[1].apply(initialize_weights)
     return pl_module
 
 def load_and_modify_state_dict(ckpt_file):
@@ -557,13 +560,13 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="ICASSP_BCBL_Task1")
-    parser.add_argument('--experiment_name', type=str, default="sBCBL_sub5_32K_32_channel_h5_SeqFT_Mixup_FMS_DIR")
+    parser.add_argument('--experiment_name', type=str, default="sBCBL_sub5_32K_32_channel_h5_SIT_Mixup_FMS_DIR")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
 
     # evaluation
     parser.add_argument('--evaluate', action='store_true')  # predictions on eval set
-    parser.add_argument('--ckpt_id', type=str, default='tgathd7f')  # for loading trained model, corresponds to wandb id
+    parser.add_argument('--ckpt_id', type=str, default='ib57mshh')  # for loading trained model, corresponds to wandb id
 
     # dataset
     # subset in {100, 50, 25, 10, 5}
