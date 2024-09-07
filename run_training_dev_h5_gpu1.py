@@ -21,11 +21,15 @@ torch.set_float32_matmul_precision("high")
 
 def load_and_modify_checkpoint(pl_module,num_classes=10):
         # Modify the feed-forward layers to match the new number of classes
-    pl_module.model.feed_forward[0] = nn.Conv2d(104, num_classes, kernel_size=1)
+    pl_module.model.feed_forward[0] = nn.Conv2d(104, num_classes, kernel_size=(1, 1),
+            stride=(1, 1),
+            padding=0,
+            bias=False)
     pl_module.model.feed_forward[1] = nn.BatchNorm2d(num_classes)
     # Initialize the weights of the modified layers
     pl_module.model.feed_forward[0].apply(initialize_weights)
     pl_module.model.feed_forward[1].apply(initialize_weights)
+    
     return pl_module
 
 def load_and_modify_state_dict(ckpt_file):
