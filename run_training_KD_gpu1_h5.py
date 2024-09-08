@@ -9,6 +9,7 @@ import transformers
 import wandb
 import json
 import torch.nn as nn
+import os
 
 from helpers.lr_schedule import exp_warmup_linear_down
 from dataset.dcase24_ntu_teacher import ntu_get_training_set_dir, ntu_get_test_set, ntu_get_eval_set, open_h5, close_h5
@@ -386,8 +387,15 @@ def train(config):
     ############ h5 edit end #################
 
     # create pytorch lightening module
+    # ckpt_dir = os.path.join(config.project_name, config.ckpt_id, "checkpoints")
+    # assert os.path.exists(ckpt_dir), f"No such folder: {ckpt_dir}"
+    # #ckpt_file = os.path.join(ckpt_dir, "last.ckpt")
+    # for file in os.listdir(ckpt_dir):
+    #     if "epoch" in file:
+    #         ckpt_file = os.path.join(ckpt_dir,file) # choosing the best model ckpt
+    #         print(f"found ckpt file: {file}")
     pl_module = PLModule(config)
-
+    # pl_module = PLModule.load_from_checkpoint(ckpt_file, config=config)
     # get model complexity from nessi and log results to wandb
     sample = next(iter(test_dl))[0][0].unsqueeze(0)
     shape = pl_module.mel_forward(sample).size()
@@ -525,7 +533,7 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="ICASSP_BCBL_Task1")
-    parser.add_argument('--experiment_name', type=str, default="NTU_Var1-T_32BCBL-S_sub5_FMS_DIR_32K")
+    parser.add_argument('--experiment_name', type=str, default="NTU_Var3-T_32BCBL-S_sub5_FMS_DIR_32K")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
 
