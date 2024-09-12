@@ -393,7 +393,7 @@ def train(config):
     trainer = pl.Trainer(max_epochs=config.n_epochs,
                          logger=wandb_logger,
                          accelerator='gpu',
-                         devices=[1],
+                         devices=1,
                          num_sanity_val_steps=0,
                          precision=config.precision, detect_anomaly=True,
                          callbacks=[pl.callbacks.ModelCheckpoint(save_last=True, monitor = "val/loss",save_top_k=1),]
@@ -435,7 +435,7 @@ def evaluate(config):
     pl_module = PLModule.load_from_checkpoint(ckpt_file, config=config)
     trainer = pl.Trainer(logger=False,
                          accelerator='gpu',
-                         devices=[1],
+                         devices=1,
                          precision=config.precision)
 
     # evaluate lightning module on development-test split
@@ -501,8 +501,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='DCASE 24 argument parser')
 
     # general
-    parser.add_argument('--project_name', type=str, default="DCASE24_Task1")
-    parser.add_argument('--experiment_name', type=str, default="DCASE24_KD_Ensemble2Base_Ali1_sub50_32K")
+    parser.add_argument('--project_name', type=str, default="ICASSP_BCBL_Task1")
+    parser.add_argument('--experiment_name', type=str, default="NTU_Var1-T_32BCBL-S_sub5_nh5")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
 
@@ -513,7 +513,7 @@ if __name__ == '__main__':
     # dataset
     # subset in {100, 50, 25, 10, 5}
     parser.add_argument('--orig_sample_rate', type=int, default=44100)
-    parser.add_argument('--subset', type=int, default=50)
+    parser.add_argument('--subset', type=int, default=5)
 
     # model
     parser.add_argument('--n_classes', type=int, default=10)  # classification model with 'n_classes' output neurons
