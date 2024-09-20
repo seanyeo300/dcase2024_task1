@@ -560,7 +560,7 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="ICASSP_BCBL_Task1")
-    parser.add_argument('--experiment_name', type=str, default="tBCBL_sub5_441K_32_channel_STtau_nh5")
+    parser.add_argument('--experiment_name', type=str, default="tBCBL_sub5_441K_32_channel_STtau_FMS_only_nh5")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
 
@@ -588,7 +588,7 @@ if __name__ == '__main__':
     parser.add_argument('--mixstyle_alpha', type=float, default=0.3)
     parser.add_argument('--weight_decay', type=float, default=0.0001)
     parser.add_argument('--roll_sec', type=int, default=0)  # roll waveform over time, default = 0.1
-    parser.add_argument('--dir_prob', type=float, default=0.6)  # prob. to apply device impulse response augmentation, default= 0.6
+    parser.add_argument('--dir_prob', type=float, default=0)  # prob. to apply device impulse response augmentation
     parser.add_argument('--mixup_alpha', type=float, default=1.0)
 
     # peak learning rate (in cosinge schedule)
