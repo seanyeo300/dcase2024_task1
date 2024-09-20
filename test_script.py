@@ -149,6 +149,7 @@ mel = torchaudio.transforms.MelSpectrogram(
     f_min=config.f_min,
     f_max=config.f_max
     )
+
 mel_passt = AugmentMelSTFT(n_mels=config.n_mels,
                                   sr=config.resample_rate,
                                   win_length=config.window_length,
@@ -164,6 +165,7 @@ mel_passt = AugmentMelSTFT(n_mels=config.n_mels,
 
 
 # # to create audio samples h5 file
+<<<<<<< Updated upstream
 df = pd.read_csv(meta_csv, sep="\t")
 train_files = pd.read_csv(train_files_csv, sep='\t')['filename'].values.reshape(-1)
 files = df['filename'].values.reshape(-1)
@@ -193,6 +195,52 @@ hf.close()
 
 
 
+=======
+# df = pd.read_csv(meta_csv, sep="\t")
+# train_files = pd.read_csv(train_files_csv, sep='\t')['filename'].values.reshape(-1)
+# files = df['filename'].values.reshape(-1)
+
+# hf = h5py.File('h5py_audio_wav_test', 'w')
+# for file_idx in tqdm(range(len(files))):
+#     mel_sig, _ = torchaudio.load(os.path.join(dataset_dir, files[file_idx]),format='wav')
+#     #output_str = dataset_dir + 'h5' + train_files[file_idx][5:-4] + '.h5'
+#     output_str = files[file_idx][5:-4]
+#     # print(f"output = {output_str}")
+#     #with h5py.File(output_str, 'w') as hf:
+#     hf.create_dataset(output_str, data = mel_sig)    
+# hf.close()
+
+# Create mel HDF5 file
+# df = pd.read_csv(meta_csv, sep="\t")
+# train_files = pd.read_csv(train_files_csv, sep='\t')['filename'].values.reshape(-1)
+# files = df['filename'].values.reshape(-1)
+
+# hf = h5py.File('h5py_cochl10_256bins', 'w')
+# for file_idx in tqdm(range(len(files))):
+#     sig, _ = torchaudio.load(os.path.join(dataset_dir, files[file_idx]))
+#     mel_sig = mel_passt(sig)
+#     output_str = files[file_idx][5:-4]
+#     hf.create_dataset(output_str, data=mel_sig)
+# hf.close()
+
+dir_folder = r'F:\Github\dcase2024_task1\dataset\dirs'
+# Create a list of all wav files in the directory
+files = [f for f in os.listdir(dir_folder) if f.endswith('.wav')]
+hf = h5py.File('h5py_mic_wav_1.h5', 'w')
+
+# Iterate over each file in the directory
+for file_idx in tqdm(range(len(files))):
+    # Load the audio signal from the file
+    mel_sig, _ = torchaudio.load(os.path.join(dir_folder, files[file_idx]))
+    # Generate the output string for the dataset name
+    output_str = files[file_idx][:-4]  # Removing '.wav' extension
+    # Create a dataset in the HDF5 file with the audio signal data
+    hf.create_dataset(output_str, data=mel_sig)
+
+# Close the HDF5 file
+hf.close()
+
+>>>>>>> Stashed changes
 # # to create mel data h5 file
 # df = pd.read_csv(meta_csv, sep="\t")
 # #train_files = pd.read_csv(train_files_csv, sep='\t')['filename'].values.reshape(-1)
@@ -209,22 +257,7 @@ hf.close()
 #     hf.create_dataset(output_str, data = mel_sig)    
 # hf.close() 
 
-# dir_folder = r'F:\Github\dcase2024_task1\dataset\dirs'
-# # Create a list of all wav files in the directory
-# files = [f for f in os.listdir(dir_folder) if f.endswith('.wav')]
-# hf = h5py.File('h5py_mic_wav_1.h5', 'w')
 
-# # Iterate over each file in the directory
-# for file_idx in tqdm(range(len(files))):
-#     # Load the audio signal from the file
-#     mel_sig, _ = torchaudio.load(os.path.join(dir_folder, files[file_idx]))
-#     # Generate the output string for the dataset name
-#     output_str = files[file_idx][:-4]  # Removing '.wav' extension
-#     # Create a dataset in the HDF5 file with the audio signal data
-#     hf.create_dataset(output_str, data=mel_sig)
-
-# # Close the HDF5 file
-# hf.close()
 
 # # Save eval set files to h5
 # df = pd.read_csv(eval_csv, sep="\t")
