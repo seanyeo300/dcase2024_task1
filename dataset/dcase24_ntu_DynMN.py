@@ -11,7 +11,7 @@ import librosa
 from scipy.signal import convolve
 import pathlib
 import h5py
-from dataset.helpers.audiodatasets import PreprocessDataset
+from dataset.helpers.audiodatasets import PreprocessDataset, get_gain_augment_func, get_roll_func
 
 dataset_dir = r"D:\Sean\DCASE\datasets\Extract_to_Folder\TAU-urban-acoustic-scenes-2022-mobile-development" # Alibaba
 # dataset_dir = r"F:\DCASE\2024\Datasets\TAU-urban-acoustic-scenes-2022-mobile-development" # DSP
@@ -295,7 +295,39 @@ def get_base_eval_set(meta_csv, eval_dir):
     ds = BasicDCASE24EvalDataset(meta_csv, eval_dir)
     return ds
 
+class MixupDataset(TorchDataset):
+    """ Mixing Up wave forms
+    """
 
+    def __init__(self, dataset, beta=2, rate=0.5, num_classes=10):
+        self.beta = beta
+        self.rate = rate
+        self.dataset = dataset
+        self.num_classes = num_classes
+        print(f"Mixing up waveforms from dataset of len {len(dataset)}")
+
+    def __getitem__(self, index):
+        x1, f1, y1, d1, c1, i1 = self.dataset[index]
+        y = np.zeros(self.num_classes, dtype="float32")
+        y[y1] = 1.
+        y1 = y
+        if torch.rand(1) < self.rate:
+            idx2 = torch.randint(len(self.dataset), (1,)).item()
+            x2, _, y2, _, _, _ = self.dataset[idx2]
+            y = np.zeros(self.num_classes, dtype="float32")
+            y[y2] = 1.
+            y2 = y
+            l = np.random.beta(self.beta, self.beta)
+            l = max(l, 1. - l)
+            x1 = x1 - x1.mean()
+            x2 = x2 - x2.mean()
+            x = (x1 * l + x2 * (1. - l))
+            x = x - x.mean()
+            return x, f1, (y1 * l + y2 * (1. - l)), d1, c1, i1
+        return x1, f1, y1, d1, c1, i1
+
+    def __len__(self):
+        return len(self.dataset)
 ############ implementation of I/O op reduction ###################
 
 class BasicDCASE24Dataseth5(TorchDataset):
@@ -324,7 +356,7 @@ class BasicDCASE24Dataseth5(TorchDataset):
     def __len__(self):
         return len(self.files)
     
-def ntu_get_training_set_dir(split=100, dir_prob = False, gain_augment=False, hf_in=None, hmic_in=None): # this variant is for DIR augmentation
+def ntu_get_training_set_dir(split=100, dir_prob = False,roll=False, gain_augment=False, hf_in=None, hmic_in=None,wavmix=False): # this variant is for DIR augmentation
     assert str(split) in ("5", "10", "25", "50", "100"), "Parameters 'split' must be in [5, 10, 25, 50, 100]"
     os.makedirs(dataset_config['split_path'], exist_ok=True)
     subset_fname = f"split{split}.csv"
@@ -334,23 +366,27 @@ def ntu_get_training_set_dir(split=100, dir_prob = False, gain_augment=False, hf
         subset_csv_url = dataset_config['split_url'] + subset_fname
         print(f"Downloading file: {subset_fname}")
         download_url_to_file(subset_csv_url, subset_split_file)
-    ds = ntu_get_base_training_set(dataset_config['meta_csv'], subset_split_file, hf_in)
-    
-    if gain_augment:
-        ds = PreprocessDataset(ds, get_gain_augment_func(gain_augment))
-        
+    ds = ntu_get_base_training_set(dataset_config['meta_csv'], subset_split_file, hf_in, wavmix)
+    if roll:
+        ds = PreprocessDataset(ds, get_roll_func())
     if dir_prob>0:
         ds = DirDataset(ds, hmic_in, dir_prob)
+    if gain_augment:
+        ds = PreprocessDataset(ds, get_gain_augment_func(gain_augment))
+    if wavmix:
+        ds = MixupDataset(ds)
+    
     return ds
 
 
-def ntu_get_base_training_set(meta_csv, train_files_csv, hf_in): # this variant does not use DIR augmentation
+def ntu_get_base_training_set(meta_csv, train_files_csv, hf_in, wavmix): # this initializes the dataset ds
     meta = pd.read_csv(meta_csv, sep="\t")
     train_files = pd.read_csv(train_files_csv, sep='\t')['filename'].values.reshape(-1)
     train_subset_indices = list(meta[meta['filename'].isin(train_files)].index)
     ds = SimpleSelectionDataset(BasicDCASE24Dataseth5(meta_csv, hf_in),
                                 train_subset_indices)
-    ds = AddLogitsDataset(ds, train_subset_indices, dataset_config['logits_file'])
+    if not wavmix:
+        ds = AddLogitsDataset(ds, train_subset_indices, dataset_config['logits_file'])
     return ds
 
 def ntu_get_test_set(hf_in = None):
