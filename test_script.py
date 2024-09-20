@@ -104,27 +104,28 @@ args = Namespace(project_name='DCASE24_BCBL',
 #                     episode=1000)
 config = args
 # meta_csv = r"F:\DCASE\2024\Datasets\TAU-urban-acoustic-scenes-2022-mobile-development\meta.csv" # DSP
-# meta_csv = r"D:\Sean\DCASE\datasets\Extract_to_Folder\TAU-urban-acoustic-scenes-2022-mobile-development\meta.csv" # ALI
+meta_csv = r"D:\Sean\DCASE\datasets\Extract_to_Folder\TAU-urban-acoustic-scenes-2022-mobile-development\meta.csv" # ALI
 # meta_csv = r"F:\CochlScene\meta.csv" # DSP
-meta_csv = r"D:\Sean\CochlScene\meta.csv" # ALI
+# meta_csv = r"D:\Sean\CochlScene\meta.csv" # ALI
 # train_files_csv = r"F:\DCASE\2024\Datasets\TAU-urban-acoustic-scenes-2022-mobile-development\split100.csv" # DSP
-# train_files_csv = r"D:\Sean\DCASE\datasets\Extract_to_Folder\TAU-urban-acoustic-scenes-2022-mobile-development\split100.csv" # ALI
+train_files_csv = r"D:\Sean\DCASE\datasets\Extract_to_Folder\TAU-urban-acoustic-scenes-2022-mobile-development\split100.csv" # ALI
 # train_files_csv = r"F:\Github\dcase2024_task1\split_setup\splitcochl.csv"
-train_files_csv = r"D:\Sean\github\cpjku_dcase23_NTU\split_setup\splitcochl10s.csv"
+# train_files_csv = r"D:\Sean\github\cpjku_dcase23_NTU\split_setup\splitcochl10s.csv"
 # eval_meta_csv = 'c:/Dataset/eval_dataset_2024/meta.csv'
 # dataset_dir = r"F:\DCASE\2024\Datasets\TAU-urban-acoustic-scenes-2022-mobile-development" # DSP
-# dataset_dir = r"D:\Sean\DCASE\datasets\Extract_to_Folder\TAU-urban-acoustic-scenes-2022-mobile-development" # ALI
+dataset_dir = r"D:\Sean\DCASE\datasets\Extract_to_Folder\TAU-urban-acoustic-scenes-2022-mobile-development" # ALI
 # dataset_dir = r"F:\CochlScene"
-dataset_dir = r"D:\Sean\CochlScene" # ALI
+# dataset_dir = r"D:\Sean\CochlScene" # ALI
 # eval_dataset_dir = 'c:/Dataset/eva_dataset_2024/'
 # eval_csv = r"F:\DCASE\2024\Datasets\TAU-urban-acoustic-scenes-2024-mobile-evaluation\evaluation_setup\fold1_test.csv" # DSP
-# eval_csv = r"D:\Sean\DCASE\datasets\Extract_to_Folder\TAU-urban-acoustic-scenes-2022-mobile-development\evaluation_setup\fold1_test.csv" #ALI
+eval_csv = r"D:\Sean\DCASE\datasets\Extract_to_Folder\TAU-urban-acoustic-scenes-2022-mobile-development\evaluation_setup\fold1_test.csv" #ALI
 # eval_csv = r"F:\Github\dcase2024_task1\split_setup\val_cochl10s.csv" #DSP
-eval_csv = r"D:\Sean\github\cpjku_dcase23_NTU\split_setup\val_cochl10s.csv" # ALI
+# eval_csv = r"D:\Sean\github\cpjku_dcase23_NTU\split_setup\val_cochl10s.csv" # ALI
 # eval_dir = r"F:\DCASE\2024\Datasets\TAU-urban-acoustic-scenes-2024-mobile-evaluation" # DSP
 # eval_dir = r"F:\DCASE\2024\Datasets\TAU-urban-acoustic-scenes-2024-mobile-evaluation" # AlI
 # test_csv = r"F:\Github\dcase2024_task1\split_setup\test_cochl10s.csv" # DSP
-test_csv = r"D:\Sean\github\cpjku_dcase23_NTU\split_setup\test_cochl10s.csv" # ALI
+test_csv = r"D:\Sean\github\dcase2024_task1\split_setup\test.csv" # ALI
+# test_csv = r"D:\Sean\github\cpjku_dcase23_NTU\split_setup\test_cochl10s.csv" # ALI
 # eval_dir = r"F:\DCASE\2024\Datasets\TAU-urban-acoustic-scenes-2024-mobile-evaluation"
 
 
@@ -163,32 +164,32 @@ mel_passt = AugmentMelSTFT(n_mels=config.n_mels,
 
 
 # # to create audio samples h5 file
-# df = pd.read_csv(meta_csv, sep="\t")
-# train_files = pd.read_csv(train_files_csv, sep='\t')['filename'].values.reshape(-1)
-# files = df['filename'].values.reshape(-1)
-
-# hf = h5py.File('h5py_cochl_wav', 'w')
-# for file_idx in tqdm(range(len(files))):
-#     mel_sig, _ = torchaudio.load(os.path.join(dataset_dir, files[file_idx]))
-#     #output_str = dataset_dir + 'h5' + train_files[file_idx][5:-4] + '.h5'
-#     output_str = files[file_idx][5:-4]
-#     print(f"output = {output_str}")
-#     #with h5py.File(output_str, 'w') as hf:
-#     hf.create_dataset(output_str, data = mel_sig)    
-# hf.close()
-
-# Create mel HDF5 file
 df = pd.read_csv(meta_csv, sep="\t")
 train_files = pd.read_csv(train_files_csv, sep='\t')['filename'].values.reshape(-1)
 files = df['filename'].values.reshape(-1)
 
-hf = h5py.File('h5py_cochl10_256bins', 'w')
+hf = h5py.File('h5py_cochl_wav', 'w')
 for file_idx in tqdm(range(len(files))):
-    sig, _ = torchaudio.load(os.path.join(dataset_dir, files[file_idx]))
-    mel_sig = mel_passt(sig)
+    mel_sig, _ = torchaudio.load(os.path.join(dataset_dir, files[file_idx]))
+    #output_str = dataset_dir + 'h5' + train_files[file_idx][5:-4] + '.h5'
     output_str = files[file_idx][5:-4]
-    hf.create_dataset(output_str, data=mel_sig)
+    print(f"output = {output_str}")
+    #with h5py.File(output_str, 'w') as hf:
+    hf.create_dataset(output_str, data = mel_sig)    
 hf.close()
+
+# Create mel HDF5 file
+# df = pd.read_csv(meta_csv, sep="\t")
+# train_files = pd.read_csv(train_files_csv, sep='\t')['filename'].values.reshape(-1)
+# files = df['filename'].values.reshape(-1)
+
+# hf = h5py.File('h5py_cochl10_256bins', 'w')
+# for file_idx in tqdm(range(len(files))):
+#     sig, _ = torchaudio.load(os.path.join(dataset_dir, files[file_idx]))
+#     mel_sig = mel_passt(sig)
+#     output_str = files[file_idx][5:-4]
+#     hf.create_dataset(output_str, data=mel_sig)
+# hf.close()
 
 
 
