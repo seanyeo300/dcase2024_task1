@@ -533,13 +533,13 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="ICASSP_BCBL_Task1")
-    parser.add_argument('--experiment_name', type=str, default="NTU_Var3-T_32BCBL_FTcs_SLtau_CLr0.01-S_sub5")
+    parser.add_argument('--experiment_name', type=str, default="NTU_Var5-T_32BCBL-S_sub5_h5")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
 
     # evaluation
     parser.add_argument('--evaluate', action='store_true')  # predictions on eval set
-    parser.add_argument('--ckpt_id', type=str, default='k0r7gu0i')  # for loading trained model, corresponds to wandb id k0r7gu0i
+    parser.add_argument('--ckpt_id', type=str, default=None)  # for loading trained model, corresponds to wandb id k0r7gu0i
 
     # dataset
     # subset in {100, 50, 25, 10, 5}

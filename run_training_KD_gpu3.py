@@ -11,7 +11,7 @@ import json
 import torch.nn as nn
 
 from helpers.lr_schedule import exp_warmup_linear_down
-from dataset.dcase24_dev_teacher2 import get_training_set, get_test_set, get_eval_set
+from dataset.dcase24_dev_teacher3 import get_training_set, get_test_set, get_eval_set
 from helpers.init import worker_init_fn
 from models.baseline import get_model
 from helpers.utils import mixstyle
@@ -502,13 +502,13 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="ICASSP_BCBL_Task1")
-    parser.add_argument('--experiment_name', type=str, default="NTU_Var4-T_32BCBL-S_sub5_nh5")
+    parser.add_argument('--experiment_name', type=str, default="NTU_Var1-T_32BCBL_FTcs_SLtau_CLr0.01-S_sub5_nh5")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
 
     # evaluation
     parser.add_argument('--evaluate', action='store_true')  # predictions on eval set
-    parser.add_argument('--ckpt_id', type=str, default=None)  # for loading trained model, corresponds to wandb id
+    parser.add_argument('--ckpt_id', type=str, default="esve4gof")  # for loading trained model, corresponds to wandb id
 
     # dataset
     # subset in {100, 50, 25, 10, 5}
