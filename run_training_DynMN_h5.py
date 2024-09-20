@@ -21,11 +21,11 @@ def train(config):
     # Train Models for Acoustic Scene Classification
 
    # logging is done using wandb
-    wandb_logger = WandbLogger(
-        project=config.project_name,
-        notes="Baseline System for DCASE'24 Task 1.",
-        tags=["DCASE24"],
-        config=config,  # this logs all hyperparameters for us
+    wandb.init(
+        project="NTU_ASC24_DynMN",
+        notes="Fine-tune Models for Acoustic Scene Classification.",
+        tags=["Tau Urban Acoustic Scenes 2022 Mobile", "Acoustic Scene Classification", "Fine-Tuning"],
+        config=config,
         name=config.experiment_name
     )
     # train dataloader
@@ -58,7 +58,7 @@ def train(config):
     if model_name.startswith("dymn"):
         model = get_dymn(width_mult=width, pretrained_name=pretrained_name,
                          pretrain_final_temp=config.pretrain_final_temp,
-                         num_classes=10)
+                         num_classes=config.num_classes)
     # else:
     #     model = get_mobilenet(width_mult=width, pretrained_name=pretrained_name,
     #                           head_type=config.head_type, se_dims=config.se_dims,
@@ -188,12 +188,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Example of parser. ')
 
     # general
-    parser.add_argument('--experiment_name', type=str, default="tDynMN_32K_FMS_DIR")
+    parser.add_argument('--experiment_name', type=str, default="tDynMN_32K_FMS_test_run")
     parser.add_argument('--cuda', action='store_true', default=True)
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--num_workers', type=int, default=0)
     parser.add_argument('--cache_path', type=str, default=None)
-
+    parser.add_argument('--num_classes',type=int,default=10)
     # training
     parser.add_argument('--pretrained', action='store_true', default=True) # Pre-trained on AS
     parser.add_argument('--model_name', type=str, default="dymn20_as") # Best MAP model
@@ -209,9 +209,10 @@ if __name__ == '__main__':
     parser.add_argument('--no_wavmix', action='store_true', default=False)
     parser.add_argument('--gain_augment', type=int, default=12)
     parser.add_argument('--weight_decay', type=int, default=0.0)
+    parser.add_argument('--dir_prob', type=float, default=0)  # prob. to apply device impulse response augmentation, default for TAU = 0.6
 
     # lr schedule
-    parser.add_argument('--lr', type=float, default=8e-4)
+    parser.add_argument('--lr', type=float, default=0.003) # edited to match lr for ASC fine-tuning
     parser.add_argument('--warm_up_len', type=int, default=10)
     parser.add_argument('--ramp_down_start', type=int, default=10)
     parser.add_argument('--ramp_down_len', type=int, default=65)
