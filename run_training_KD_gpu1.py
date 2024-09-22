@@ -11,7 +11,7 @@ import json
 import torch.nn as nn
 
 from helpers.lr_schedule import exp_warmup_linear_down
-from dataset.dcase24_dev_teacher_10 import get_training_set, get_test_set, get_eval_set
+from dataset.dcase24_dev_teacher2 import get_training_set, get_test_set, get_eval_set
 from helpers.init import worker_init_fn
 from models.baseline import get_model
 from helpers.utils import mixstyle
@@ -393,7 +393,7 @@ def train(config):
     trainer = pl.Trainer(max_epochs=config.n_epochs,
                          logger=wandb_logger,
                          accelerator='gpu',
-                         devices=[0],
+                         devices=1,
                          num_sanity_val_steps=0,
                          precision=config.precision, detect_anomaly=True,
                          callbacks=[pl.callbacks.ModelCheckpoint(save_last=True, monitor = "val/loss",save_top_k=1),]
@@ -435,7 +435,7 @@ def evaluate(config):
     pl_module = PLModule.load_from_checkpoint(ckpt_file, config=config)
     trainer = pl.Trainer(logger=False,
                          accelerator='gpu',
-                         devices=[0],
+                         devices=1,
                          precision=config.precision)
 
     # evaluate lightning module on development-test split
@@ -475,7 +475,7 @@ def evaluate(config):
     # all filenames
     all_files = [item[len("audio/"):] for files, _ in predictions for item in files]
     # all predictions
-    logits = torch.cat([torch.as_tensor(p) for _, p in predictions], 0)
+    all_predictions = torch.cat([torch.as_tensor(p) for _, p in predictions], 0)
     all_predictions = F.softmax(all_predictions, dim=1)
 
     # write eval set predictions to csv file
@@ -487,7 +487,7 @@ def evaluate(config):
     scene_labels = [class_names[i] for i in torch.argmax(all_predictions, dim=1)]
     df['scene_label'] = scene_labels
     for i, label in enumerate(class_names):
-        df[label] = logits[:, i]
+        df[label] = all_predictions[:, i]
     df = pd.DataFrame(df)
 
     # save eval set predictions, model state_dict and info to output folder
@@ -501,8 +501,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='DCASE 24 argument parser')
 
     # general
-    parser.add_argument('--project_name', type=str, default="DCASE24_Task1")
-    parser.add_argument('--experiment_name', type=str, default="DCASE24_KD_Pansemble2Base_Ali1_sub5_FMS_DIR_32K")
+    parser.add_argument('--project_name', type=str, default="ICASSP_BCBL_Task1")
+    parser.add_argument('--experiment_name', type=str, default="NTU_Var4-T_32BCBL-S_sub5_nh5")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
 

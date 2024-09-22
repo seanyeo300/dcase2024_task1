@@ -8,7 +8,8 @@ import torch.nn.functional as F
 import transformers
 import wandb
 import json
-
+import os
+import torch.nn as nn
 
 from torch.autograd import Variable
 from dataset.dcase24_dev_teacher import get_training_set, get_test_set, get_eval_set
@@ -16,8 +17,68 @@ from helpers.init import worker_init_fn
 from models.baseline import get_model
 from helpers.utils import mixstyle, mixup_data
 from helpers import nessi
-
+from models.baseline import initialize_weights
 torch.set_float32_matmul_precision("high")
+def load_and_modify_checkpoint(pl_module,num_classes=10):
+        # Modify the feed-forward layers to match the new number of classes
+    pl_module.model.feed_forward[0] = nn.Conv2d(104, num_classes, kernel_size=(1, 1),
+            stride=(1, 1),
+            padding=0,
+            bias=False)
+    pl_module.model.feed_forward[1] = nn.BatchNorm2d(num_classes)
+    # Initialize the weights of the modified layers
+    pl_module.model.feed_forward[0].apply(initialize_weights)
+    pl_module.model.feed_forward[1].apply(initialize_weights)
+    
+    return pl_module
+
+def load_and_modify_state_dict(ckpt_file):
+    # Load the checkpoint into a dictionary
+    checkpoint = torch.load(ckpt_file)
+    
+    # Extract the state dict from the checkpoint
+    state_dict = checkpoint['state_dict']
+    if state_dict is None:
+        raise ValueError("Checkpoint does not contain 'state_dict'.")
+    print("State dict loaded successfully.")
+    # Check if 'mel.0.kernel' key is missing and add it if necessary
+    if 'mel.0.kernel' not in state_dict:
+        print("Adding missing 'mel.0.kernel' key with tensor size [320, 1, 459].")
+        state_dict['mel.0.kernel'] = torch.randn([320, 1, 459])  # Create a random tensor with the correct size
+    
+    # Modify feed-forward layers to match the new number of classes
+    # state_dict['model.feed_forward.0.weight'] = torch.randn([num_classes, 104, 1, 1])
+    # state_dict['model.feed_forward.1.weight'] = torch.ones([num_classes])
+    # state_dict['model.feed_forward.1.bias'] = torch.zeros([num_classes])
+    # state_dict['model.feed_forward.1.running_mean'] = torch.zeros([num_classes])
+    # state_dict['model.feed_forward.1.running_var'] = torch.ones([num_classes])
+    
+    return state_dict
+def load_modified_checkpoint_into_pl_module(ckpt_file, config):
+    # Load and modify the state dict from the checkpoint file
+    modified_state_dict = load_and_modify_state_dict(ckpt_file)
+    
+    # Initialize the Lightning module
+    pl_module = PLModule(config=config)
+    if pl_module is None:
+        print("pl_module is None when intializing on config")
+    else:
+        print("pl_module initialized successfully.")
+    pl_module.load_state_dict(modified_state_dict)
+    if pl_module is None:
+        print("pl_module is None during load_state_dict")
+    else:
+        print("pl_module initialized successfully.")
+    # Load the modified state dict into the Lightning module
+    pl_module = load_and_modify_checkpoint(pl_module, num_classes=10)
+    if pl_module is None:
+        print("Final check: pl_module is None when modifying FF layers")
+    else:
+        print("Final check: pl_module initialized successfully.")
+    
+    
+    
+    return pl_module
 
 class PLModule(pl.LightningModule):
     def __init__(self, config):
@@ -101,7 +162,16 @@ class PLModule(pl.LightningModule):
         The specified items are used automatically in the optimization loop (no need to call optimizer.step() yourself).
         :return: optimizer and learning rate scheduler
         """
-
+        # representation_params = []
+        # for name, param in self.model.named_parameters():
+        #     if 'feed_forward' not in name:
+        #         representation_params.append(param)
+        # # Collect parameters for the classification heads
+        # head_params = list(self.model.feed_forward.parameters())
+        # optimizer = torch.optim.AdamW([
+        #     {'params': representation_params, 'lr': self.config.lr},  # Low learning rate for representation layers
+        #     {'params': head_params, 'lr': 0.01},             # High learning rate for classifier heads
+        # ], weight_decay=self.config.weight_decay)
         optimizer = torch.optim.AdamW(self.parameters(), lr=self.config.lr, weight_decay=self.config.weight_decay)
         scheduler = transformers.get_cosine_schedule_with_warmup(
             optimizer,
@@ -361,7 +431,17 @@ def train(config):
 
     # create pytorch lightening module
     pl_module = PLModule(config)
-
+# # create pytorch lightening module
+#     ckpt_dir = os.path.join(config.project_name, config.ckpt_id, "checkpoints")
+#     assert os.path.exists(ckpt_dir), f"No such folder: {ckpt_dir}"
+#     #ckpt_file = os.path.join(ckpt_dir, "last.ckpt")
+#     for file in os.listdir(ckpt_dir):
+#         if "epoch" in file:
+#             ckpt_file = os.path.join(ckpt_dir,file) # choosing the best model ckpt
+#             print(f"found ckpt file: {file}")
+    
+    # pl_module = PLModule(config)
+    # pl_module = load_modified_checkpoint_into_pl_module(ckpt_file, config=config)
     # get model complexity from nessi and log results to wandb
     sample = next(iter(test_dl))[0][0].unsqueeze(0)
     shape = pl_module.mel_forward(sample).size()
@@ -479,8 +559,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='DCASE 24 argument parser')
 
     # general
-    parser.add_argument('--project_name', type=str, default="DCASE24_Task1")
-    parser.add_argument('--experiment_name', type=str, default="sBCBL_sub5_32K_FMS_DIR_Mixup_32_Channel_nh5")
+    parser.add_argument('--project_name', type=str, default="ICASSP_BCBL_Task1")
+    parser.add_argument('--experiment_name', type=str, default="tBCBL_sub5_441K_32_channel_STtau_nh5")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
 
@@ -508,7 +588,7 @@ if __name__ == '__main__':
     parser.add_argument('--mixstyle_alpha', type=float, default=0.3)
     parser.add_argument('--weight_decay', type=float, default=0.0001)
     parser.add_argument('--roll_sec', type=int, default=0)  # roll waveform over time, default = 0.1
-    parser.add_argument('--dir_prob', type=float, default=0.6)  # prob. to apply device impulse response augmentation
+    parser.add_argument('--dir_prob', type=float, default=0.6)  # prob. to apply device impulse response augmentation, default= 0.6
     parser.add_argument('--mixup_alpha', type=float, default=1.0)
 
     # peak learning rate (in cosinge schedule)
@@ -516,7 +596,7 @@ if __name__ == '__main__':
     parser.add_argument('--warmup_steps', type=int, default=100) # default = 2000, divide by 20 for 5% subset, 10 for 10%, 4 for 25%, 2 for 50%
 
     # preprocessing
-    parser.add_argument('--sample_rate', type=int, default=32000) #default = 32000
+    parser.add_argument('--sample_rate', type=int, default=44100) #default = 32000
     parser.add_argument('--window_length', type=int, default=3072)  # in samples (corresponds to 96 ms)
     # parser.add_argument('--window_length', type=int, default=4234)
     parser.add_argument('--hop_length', type=int, default=500)  # in samples (corresponds to ~16 ms)

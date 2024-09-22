@@ -11,13 +11,32 @@ def run_multiple_scripts(scripts_with_args):
 if __name__ == "__main__":
     # Example: Replace these with your actual script names and arguments
     scripts_to_run = [
-        ('get_logits.py', ['--evaluate', '--ckpt_id', '1o0lgb4u']),
-        ('get_logits.py', ['--evaluate', '--ckpt_id', 'dhrckv13']),
-        ('get_logits.py', ['--evaluate', '--ckpt_id', 'l521lxpv'])
-        # ('get_logits.py', ['--evaluate', '--ckpt_id', '4zesr7bt'])
-        # ('get_logits.py', ['--evaluate', '--ckpt_id', 'fm67hz2c'])
+        # ('get_logits.py', ['--evaluate', '--ckpt_id', 'qi2qx93m']),
+        # ('get_logits.py', ['--evaluate', '--ckpt_id', 'gc41eep8','--subset','5']),
+        # ('get_logits.py', ['--evaluate', '--ckpt_id', 'r0ina4uc','--subset','5']),
+        ('get_logits.py', ['--evaluate', '--ckpt_id', 'kybgcsn2','--subset','5']),
+        ('get_logits.py', ['--evaluate', '--ckpt_id', '7ltm2p1l','--subset','5'])
     ]
     run_multiple_scripts(scripts_to_run)
+
+
+# tBCBL_sub5_nh5
+['7og6lmpb', '18llaju7', 'gc41eep8', 'r0ina4uc', '32jp9l7h', 'nwg60o2k']
+#BCBL_sub5 FMS+DIR, FMS, DIR
+["7og6lmpb", "kybgcsn2", "7ltm2p1l"]
+# tBBL_sub10_nh5
+['qi2qx93m','gxw02np0', 'w1cm7obb','6gy1hz5n','0lumb7qw','4y5iqp12']
+
+
+
+
+
+
+
+
+
+
+
 
 ###32-BCBL@44.1K models###
 #50%
