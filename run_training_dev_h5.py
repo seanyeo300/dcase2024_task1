@@ -135,15 +135,17 @@ class PLModule(pl.LightningModule):
         if self.config.mixstyle_p > 0:
             # frequency mixstyle
             x = mixstyle(x, self.config.mixstyle_p, self.config.mixstyle_alpha)
-        inputs, targets_a, targets_b, lam = mixup_data(x, labels,
-                                                       self.config.mixup_alpha, use_cuda=True)
-        inputs, targets_a, targets_b = map(Variable, (inputs,
-                                                      targets_a, targets_b))
-        y_hat = self.model(x.cuda())
-        loss = self.mixup_criterion(criterion, y_hat, targets_a, targets_b, lam)
-        
-        # samples_loss = F.cross_entropy(y_hat, labels, reduction="none")
-        # loss = samples_loss.mean()
+            y_hat = self.model(x.cuda())
+        if self.config.mixup:
+            inputs, targets_a, targets_b, lam = mixup_data(x, labels,
+                                                        self.config.mixup_alpha, use_cuda=True)
+            inputs, targets_a, targets_b = map(Variable, (inputs,
+                                                        targets_a, targets_b))
+            
+            loss = self.mixup_criterion(criterion, y_hat, targets_a, targets_b, lam)
+        else:
+            samples_loss = F.cross_entropy(y_hat, labels, reduction="none")
+            loss = samples_loss.mean()
 
         self.log("lr", self.trainer.optimizers[0].param_groups[0]['lr'])
         self.log("epoch", self.current_epoch)
@@ -350,13 +352,13 @@ def train(config):
     # train dataloader
     assert config.subset in {100, 50, 25, 10, 5}, "Specify an integer value in: {100, 50, 25, 10, 5} to use one of " \
                                                   "the given subsets."
-
+    roll_samples = config.orig_sample_rate * config.roll_sec
     # get pointer to h5 file containing audio samples
     hf_in = open_h5('h5py_audio_wav')
     hmic_in = open_h5('h5py_mic_wav_1')
     
     # get_training set already as logic to handle dir_prob=0
-    train_dl = DataLoader(dataset=ntu_get_training_set_dir(config.subset, config.dir_prob, hf_in, hmic_in),               
+    train_dl = DataLoader(dataset=ntu_get_training_set_dir(config.subset, config.dir_prob, hf_in, hmic_in, roll_samples),               
                           worker_init_fn=worker_init_fn,
                           num_workers=config.num_workers,
                           batch_size=config.batch_size,
@@ -495,7 +497,7 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="ICASSP_BCBL_Task1")
-    parser.add_argument('--experiment_name', type=str, default="tBCBL_FTtau_sub5_32K_DIR_FMS_32_channel_h5")
+    parser.add_argument('--experiment_name', type=str, default="missing_accuracy_investigation_param_default_h5")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
 
@@ -522,13 +524,14 @@ if __name__ == '__main__':
     parser.add_argument('--mixstyle_p', type=float, default=0.4)  # frequency mixstyle
     parser.add_argument('--mixstyle_alpha', type=float, default=0.3)
     parser.add_argument('--weight_decay', type=float, default=0.0001)
-    parser.add_argument('--roll_sec', type=int, default=0)  # roll waveform over time, default = 0.1
-    parser.add_argument('--dir_prob', type=float, default=0.6)  # prob. to apply device impulse response augmentation
+    parser.add_argument('--roll_sec', type=int, default=0.1)  # roll waveform over time, default = 0.1
+    parser.add_argument('--dir_prob', type=float, default=0)  # prob. to apply device impulse response augmentation, default = 0.6
+    parser.add_argument('--mixup',type=bool, default =0)
     parser.add_argument('--mixup_alpha', type=float, default=1.0)
 
     # peak learning rate (in cosinge schedule)
     parser.add_argument('--lr', type=float, default=0.005)
-    parser.add_argument('--warmup_steps', type=int, default=100) # default = 2000, divide by 20 for 5% subset, 10 for 10%, 4 for 25%, 2 for 50%
+    parser.add_argument('--warmup_steps', type=int, default=2000) # default = 2000, divide by 20 for 5% subset, 10 for 10%, 4 for 25%, 2 for 50%
 
     # preprocessing
     parser.add_argument('--sample_rate', type=int, default=32000) #default = 32000
