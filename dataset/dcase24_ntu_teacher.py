@@ -29,10 +29,10 @@ dataset_config = {
     "eval_meta_csv": os.path.join(dataset_dir, "meta.csv"), # to get the full prediction list with index intact
     # "logits_file": os.path.join("predictions","i3i3xf1x", "logits.pt")
     # "logits_file": os.path.join("predictions","ensemble", "ensemble_logits.pt") #specifies where the logit and predictions are stored. 
-    # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_PASST_tv1.pt") # Continual Learning teacher
+    "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_PASST_tv1.pt") # Continual Learning teacher
     # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_tv2.pt") # Continual Learning teacher
     # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_tv3.pt") # Continual Learning teacher sub5_ensemble_12_model_tv5.pt
-    "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_12_model_tv5.pt")
+    # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_12_model_tv5.pt")
     # "eval_dir": os.path.join(dataset_dir, "TAU-urban-acoustic-scenes-2024-mobile-evaluation"), 
     # "eval_meta_csv": os.path.join(dataset_dir,  "TAU-urban-acoustic-scenes-2024-mobile-evaluation", "meta.csv")
 }
@@ -323,7 +323,7 @@ class BasicDCASE24Dataseth5(TorchDataset):
     def __len__(self):
         return len(self.files)
     
-def ntu_get_training_set_dir(split=100, dir_prob = False, hf_in=None, hmic_in=None): # this variant is for DIR augmentation
+def ntu_get_training_set_dir(split=100, dir_prob = False, hf_in=None, hmic_in=None, roll = None): # this variant is for DIR augmentation
     assert str(split) in ("5", "10", "25", "50", "100"), "Parameters 'split' must be in [5, 10, 25, 50, 100]"
     os.makedirs(dataset_config['split_path'], exist_ok=True)
     subset_fname = f"split{split}.csv"
@@ -336,6 +336,8 @@ def ntu_get_training_set_dir(split=100, dir_prob = False, hf_in=None, hmic_in=No
     ds = ntu_get_base_training_set(dataset_config['meta_csv'], subset_split_file, hf_in)
     if dir_prob:
         ds = DirDataset(ds, hmic_in, dir_prob)
+    if roll:
+        ds = RollDataset(ds, shift_range=roll)
     return ds
 
 
