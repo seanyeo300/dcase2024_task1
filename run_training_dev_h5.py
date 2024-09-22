@@ -11,7 +11,7 @@ import json
 
 
 from torch.autograd import Variable
-from dataset.dcase24_ntu_teacher import ntu_get_training_set_dir, ntu_get_test_set, ntu_get_eval_set, open_h5, close_h5
+from dataset.dcase24_ntu_teacher import ntu_get_training_set_dir, ntu_get_test_set, ntu_get_eval_set, open_h5, close_h5, get_training_set
 from helpers.init import worker_init_fn
 from models.baseline import get_model
 from helpers.utils import mixstyle, mixup_data
@@ -135,17 +135,15 @@ class PLModule(pl.LightningModule):
         if self.config.mixstyle_p > 0:
             # frequency mixstyle
             x = mixstyle(x, self.config.mixstyle_p, self.config.mixstyle_alpha)
-            y_hat = self.model(x.cuda())
-        if self.config.mixup:
-            inputs, targets_a, targets_b, lam = mixup_data(x, labels,
-                                                        self.config.mixup_alpha, use_cuda=True)
-            inputs, targets_a, targets_b = map(Variable, (inputs,
-                                                        targets_a, targets_b))
-            
-            loss = self.mixup_criterion(criterion, y_hat, targets_a, targets_b, lam)
-        else:
-            samples_loss = F.cross_entropy(y_hat, labels, reduction="none")
-            loss = samples_loss.mean()
+        inputs, targets_a, targets_b, lam = mixup_data(x, labels,
+                                                       self.config.mixup_alpha, use_cuda=True)
+        inputs, targets_a, targets_b = map(Variable, (inputs,
+                                                      targets_a, targets_b))
+        y_hat = self.model(x.cuda())
+        loss = self.mixup_criterion(criterion, y_hat, targets_a, targets_b, lam)
+        
+        # samples_loss = F.cross_entropy(y_hat, labels, reduction="none")
+        # loss = samples_loss.mean()
 
         self.log("lr", self.trainer.optimizers[0].param_groups[0]['lr'])
         self.log("epoch", self.current_epoch)
@@ -338,7 +336,17 @@ class PLModule(pl.LightningModule):
 
         return files, y_hat
 
-
+def normalize_filenames(filenames):
+    """
+    Normalize the filenames to a common format (list of strings).
+    """
+    if isinstance(filenames, tuple):
+        return list(filenames)
+    elif isinstance(filenames, list):
+        return filenames
+    else:
+        raise TypeError("Unsupported type for filenames")
+    
 def train(config):
     # logging is done using wandb
     wandb_logger = WandbLogger(
@@ -353,6 +361,7 @@ def train(config):
     assert config.subset in {100, 50, 25, 10, 5}, "Specify an integer value in: {100, 50, 25, 10, 5} to use one of " \
                                                   "the given subsets."
     roll_samples = config.orig_sample_rate * config.roll_sec
+    
     # get pointer to h5 file containing audio samples
     hf_in = open_h5('h5py_audio_wav')
     hmic_in = open_h5('h5py_mic_wav_1')
@@ -372,6 +381,63 @@ def train(config):
                          pin_memory=True)
     # create pytorch lightening module
     pl_module = PLModule(config)
+#    # Get a sample from each DataLoader
+#     train_dl_batch = next(iter(train_dl))
+#     train_wav_batch = next(iter(train_wav))
+
+#     # Unpack batches
+#     train_dl_sample, files_h5, train_dl_labels, device_dl, _, _ = train_dl_batch
+#     train_wav_sample, files_wav, train_wav_labels, device_wav, _, _ = train_wav_batch
+
+#     # Check if the samples are exactly the same before passing through the model
+#     samples_are_equal = torch.equal(train_dl_sample, train_wav_sample)
+#     labels_are_equal = torch.equal(train_dl_labels, train_wav_labels)
+#     files_h5=normalize_filenames(files_h5)
+#     files_wav=normalize_filenames(files_wav)
+#     filenames_are_equal = (files_h5 == files_wav)
+#     # Pass the samples through the model
+#     pl_module.eval()  # Set the model to evaluation mode
+#     with torch.no_grad():
+#         # Get the model's output logits for each sample
+#         logits_dl = pl_module.mel_forward(train_dl_sample)
+#         logits_wav = pl_module.mel_forward(train_wav_sample)
+
+#     # Check if logits are exactly the same
+#     logits_are_equal = torch.equal(logits_dl, logits_wav)
+
+#     # Determine where the mismatch occurred and print diagnostic messages
+#     if not samples_are_equal:
+#         print("Devices are:")
+#         print(f"\n{device_dl,device_wav}")
+#         print("Mismatch detected before passing through the model: The input samples are different.")
+#         print(f"train_dl_sample:{train_dl_sample}")
+#         print(f"train_wav_sample:{train_wav_sample}")
+#     elif not logits_are_equal:
+#         print("Mismatch detected after passing through the model: The logits are different.")
+#     elif not labels_are_equal:
+#         print("Mismatch detected before passing through the model: The labels are different.")
+#     elif not filenames_are_equal:
+#         print("Mismatch detected before passing through the model: The filenames are different.")
+#     else:
+#         print("No mismatch detected: Both the input samples, labels, filenames, and logits are the same.")
+
+#     # Log results to wandb
+#     wandb_logger.experiment.log({
+#         'samples_are_equal': samples_are_equal,
+#         'labels_are_equal': labels_are_equal,
+#         'filenames_are_equal': filenames_are_equal,
+#         'logits_are_equal': logits_are_equal
+#     })
+
+#     # Log additional details for debugging
+#     print(f"Samples are equal? {samples_are_equal}")
+#     print(f"Labels are equal? {labels_are_equal}")
+#     print(f"Logits are equal? {logits_are_equal}")
+#     print(f"Filenames are equal? {filenames_are_equal}")
+#     print(f"Logits from train_dl sample:\n{logits_dl}")
+#     print(f"Logits from train_wav sample:\n{logits_wav}")
+#     print(f"Filename from train_dl sample:\n{files_h5}")
+#     print(f"Filename from train_wav sample:\n{files_wav}")
 
     # get model complexity from nessi and log results to wandb
     sample = next(iter(test_dl))[0][0].unsqueeze(0)
@@ -386,15 +452,17 @@ def train(config):
     trainer = pl.Trainer(max_epochs=config.n_epochs,
                          logger=wandb_logger,
                          accelerator='gpu',
-                         devices=[0],
+                         devices=1,
                          num_sanity_val_steps=0,
                          precision=config.precision,
                          callbacks=[pl.callbacks.ModelCheckpoint(save_last=True, monitor = "val/loss",save_top_k=1)]
                          )
-    # start training and validation for the specified number of epochs
+     # start training and validation for the specified number of epochs
     trainer.fit(pl_module, train_dl, test_dl)
-    trainer.test(ckpt_path='best', dataloaders=test_dl)
 
+    # final test step
+    # here: use the validation split
+    trainer.test(ckpt_path='best', dataloaders=test_dl)
     # close file pointer to h5 file 
     close_h5(hf_in)
     close_h5(hmic_in)
