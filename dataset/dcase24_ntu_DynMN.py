@@ -48,7 +48,7 @@ class DirDataset(TorchDataset):
         self.dir_p = dir_p
 
     def __getitem__(self, index):
-        x, file, label, device, city, logits = self.ds[index]
+        x, file, label, device, city, indices = self.ds[index]
         fsplit = file.rsplit("-", 1)
         device = fsplit[1][:-4]
 
@@ -69,8 +69,7 @@ class DirDataset(TorchDataset):
             # get audio file with 'new' mic response
             x = convolve(x, dir, 'full')[:, :x.shape[1]]
             x = torch.from_numpy(x)
-        return x, file, label, device, city, logits
-
+        return x, file, label, device, city, indices
     def __len__(self):
         return len(self.ds)  
 
@@ -170,7 +169,7 @@ class SimpleSelectionDataset(TorchDataset):
 
     def __getitem__(self, index):
         x, file, label, device, city = self.dataset[self.available_indices[index]]
-        return x, file, label, device, city
+        return x, file, label, device, city, self.available_indices[index]
 
     def __len__(self):
         return len(self.available_indices)
@@ -191,9 +190,9 @@ class RollDataset(TorchDataset):
         self.axis = axis
 
     def __getitem__(self, index):
-        x, file, label, device, city, logits = self.dataset[index]
+        x, file, label, device, city, indices = self.dataset[index]
         sf = int(np.random.random_integers(-self.shift_range, self.shift_range))
-        return x.roll(sf, self.axis), file, label, device, city, logits
+        return x.roll(sf, self.axis), file, label, device, city, indices
 
     def __len__(self):
         return len(self.dataset)
@@ -384,9 +383,9 @@ def ntu_get_base_training_set(meta_csv, train_files_csv, hf_in, wavmix): # this 
     train_files = pd.read_csv(train_files_csv, sep='\t')['filename'].values.reshape(-1)
     train_subset_indices = list(meta[meta['filename'].isin(train_files)].index)
     ds = SimpleSelectionDataset(BasicDCASE24Dataseth5(meta_csv, hf_in),
-                                train_subset_indices)
-    if not wavmix:
-        ds = AddLogitsDataset(ds, train_subset_indices, dataset_config['logits_file'])
+                                train_subset_indices) # return x, file, label, device, city, self.available_indices[index] (6 items)
+    # if not wavmix:
+    #     ds = AddLogitsDataset(ds, train_subset_indices, dataset_config['logits_file'])
     return ds
 
 def ntu_get_test_set(hf_in = None):
