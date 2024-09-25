@@ -15,7 +15,7 @@ from models.dymn.model import get_model as get_dymn
 from models.preprocess import AugmentMelSTFT
 from helpers.init import worker_init_fn
 from helpers.utils import NAME_TO_WIDTH, exp_warmup_linear_down, mixup, mixstyle
-
+from helpers import nessi
 
 def train(config):
     # Train Models for Acoustic Scene Classification
@@ -29,11 +29,11 @@ def train(config):
         name=config.experiment_name
     )
     # train dataloader
-    assert config.subset in {100, 50, 25, 10, 5}, "Specify an integer value in: {100, 50, 25, 10, 5} to use one of " \
+    assert config.subset in {100, 50, 25, 10, 5,"cochl10s"}, "Specify an integer value in: {100, 50, 25, 10, 5} to use one of " \
                                                   "the given subsets."
     # get pointer to h5 file containing audio samples
     hf_in = open_h5('h5py_audio_wav')
-    hmic_in = open_h5('h5py_mic_wav_1')
+    # hmic_in = open_h5('h5py_mic_wav_1')
     device = torch.device('cuda') if config.cuda and torch.cuda.is_available() else torch.device('cpu')
 
     # model to preprocess waveform into mel spectrograms
@@ -55,6 +55,11 @@ def train(config):
     model_name = config.model_name
     pretrained_name = model_name if config.pretrained else None
     width = NAME_TO_WIDTH(model_name) if model_name and config.pretrained else config.model_width
+    print(f'loading {model_name} with width: {width}')
+    print(f"\nData Augmentation Configs:") 
+    print(f"\nFMS: {config.mixstyle_p}")
+    print(f"\nNo Mixup: {config.no_wavmix}") 
+    print(f"\nNo Roll: {config.no_roll}")
     if model_name.startswith("dymn"):
         model = get_dymn(width_mult=width, pretrained_name=pretrained_name,
                          pretrain_final_temp=config.pretrain_final_temp,
@@ -66,17 +71,21 @@ def train(config):
     model.to(device)
 
     # dataloader
-    dl = DataLoader(dataset=ntu_get_training_set_dir(config.subset, config.dir_prob, config.gain_augment, hf_in, hmic_in),               
+    dl = DataLoader(dataset=ntu_get_training_set_dir(config.subset, config.dir_prob,
+                                                    roll=False if config.no_roll else True,
+                                                    wavmix=False if config.no_wavmix else True,
+                                                    gain_augment=config.gain_augment, hf_in=hf_in, hmic_in=None),               
                           worker_init_fn=worker_init_fn,
                           num_workers=config.num_workers,
                           batch_size=config.batch_size,
                           pin_memory= True,
                           shuffle=True)
     # evaluation loader
-    eval_dl = DataLoader(dataset=ntu_get_test_set(config.cache_path, config.resample_rate),
+    eval_dl = DataLoader(dataset=ntu_get_test_set(hf_in),
                          worker_init_fn=worker_init_fn,
                          num_workers=config.num_workers,
-                         batch_size=config.batch_size)
+                         batch_size=config.batch_size,
+                         pin_memory=True)
 
     # optimizer & scheduler
     lr = config.lr
@@ -88,7 +97,13 @@ def train(config):
 
     name = None
     accuracy, val_loss = float('NaN'), float('NaN')
-
+    # get model complexity from nessi and log results to wandb
+    sample = next(iter(eval_dl))[0][0].unsqueeze(0).to(device)
+    print(sample)
+    shape = _mel_forward(sample,mel).size()
+    macs, params = nessi.get_torch_size(model, input_size=shape)
+    
+    
     for epoch in range(config.n_epochs):
         mel.train()
         model.train()
@@ -103,9 +118,10 @@ def train(config):
             x = _mel_forward(x, mel)
 
             if config.mixstyle_p > 0:
+                
                 x = mixstyle(x, config.mixstyle_p, config.mixstyle_alpha)
                 y_hat, _ = model(x)
-                samples_loss = F.cross_entropy(y_hat, y, reduction="none")
+                samples_loss = F.cross_entropy(y_hat, y.long(), reduction="none")
             elif config.mixup_alpha:
                 rn_indices, lam = mixup(bs, config.mixup_alpha)
                 lam = lam.to(x.device)
@@ -139,7 +155,9 @@ def train(config):
         # log train and validation statistics
         wandb.log({"train_loss": np.mean(train_stats['train_loss']),
                    "accuracy": accuracy,
-                   "val_loss": val_loss
+                   "val_loss": val_loss,
+                   "MACs": macs,
+                   "Parameters": params
                    })
 
         # remove previous model (we try to not flood your hard disk) and save latest model
@@ -175,7 +193,7 @@ def _test(model, mel, eval_loader, device):
             y_hat, _ = model(x)
         targets.append(y.cpu().numpy())
         outputs.append(y_hat.float().cpu().numpy())
-        losses.append(F.cross_entropy(y_hat, y).cpu().numpy())
+        losses.append(F.cross_entropy(y_hat, y.long()).cpu().numpy())
 
     targets = np.concatenate(targets)
     outputs = np.concatenate(outputs)
@@ -188,12 +206,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Example of parser. ')
 
     # general
-    parser.add_argument('--experiment_name', type=str, default="tDynMN_32K_FMS_test_run")
+    parser.add_argument('--experiment_name', type=str, default="tDynMN_32K_FMS_JS_approx_settings")
     parser.add_argument('--cuda', action='store_true', default=True)
-    parser.add_argument('--batch_size', type=int, default=32)
+    parser.add_argument('--batch_size', type=int, default=48) # default = 32 ; JS = 48
     parser.add_argument('--num_workers', type=int, default=0)
     parser.add_argument('--cache_path', type=str, default=None)
     parser.add_argument('--num_classes',type=int,default=10)
+    parser.add_argument('--subset', default=5)
+    
     # training
     parser.add_argument('--pretrained', action='store_true', default=True) # Pre-trained on AS
     parser.add_argument('--model_name', type=str, default="dymn20_as") # Best MAP model
@@ -203,28 +223,28 @@ if __name__ == '__main__':
     parser.add_argument('--se_dims', type=str, default="c")
     parser.add_argument('--n_epochs', type=int, default=80)
     parser.add_argument('--mixup_alpha', type=float, default=0.3)
-    parser.add_argument('--mixstyle_p', type=float, default=0.0)
+    parser.add_argument('--mixstyle_p', type=float, default=0.4)
     parser.add_argument('--mixstyle_alpha', type=float, default=0.4)
     parser.add_argument('--no_roll', action='store_true', default=False)
-    parser.add_argument('--no_wavmix', action='store_true', default=False)
+    parser.add_argument('--no_wavmix', action='store_true', default=True) # enforces no mixup
     parser.add_argument('--gain_augment', type=int, default=12)
-    parser.add_argument('--weight_decay', type=int, default=0.0)
-    parser.add_argument('--dir_prob', type=float, default=0)  # prob. to apply device impulse response augmentation, default for TAU = 0.6
+    parser.add_argument('--weight_decay', type=int, default=0.0) #ADAM, no WD
+    parser.add_argument('--dir_prob', type=float, default=0)  # prob. to apply device impulse response augmentation, default for TAU = 0.6 ; JS does not use it
 
     # lr schedule
-    parser.add_argument('--lr', type=float, default=0.003) # edited to match lr for ASC fine-tuning
+    parser.add_argument('--lr', type=float, default=1e-4) # JS setting, TAU'19 = 0.003
     parser.add_argument('--warm_up_len', type=int, default=10)
     parser.add_argument('--ramp_down_start', type=int, default=10)
     parser.add_argument('--ramp_down_len', type=int, default=65)
     parser.add_argument('--last_lr_value', type=float, default=0.01)
 
     # preprocessing
-    parser.add_argument('--resample_rate', type=int, default=32000)
+    parser.add_argument('--resample_rate', type=int, default=32000) # JS does not use 44.1K
     parser.add_argument('--window_size', type=int, default=800)
-    parser.add_argument('--hop_size', type=int, default=320)
+    parser.add_argument('--hop_size', type=int, default=505) # default = 320 ; JS = 505
     parser.add_argument('--n_fft', type=int, default=1024)
     parser.add_argument('--n_mels', type=int, default=128)
-    parser.add_argument('--freqm', type=int, default=0)
+    parser.add_argument('--freqm', type=int, default=48)
     parser.add_argument('--timem', type=int, default=0)
     parser.add_argument('--fmin', type=int, default=0)
     parser.add_argument('--fmax', type=int, default=None)
