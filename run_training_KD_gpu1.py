@@ -11,7 +11,7 @@ import json
 import torch.nn as nn
 
 from helpers.lr_schedule import exp_warmup_linear_down
-from dataset.dcase24_dev_teacher2 import get_training_set, get_test_set, get_eval_set
+from dataset.dcase24_dev_teacher import get_training_set, get_test_set, get_eval_set
 from helpers.init import worker_init_fn
 from models.baseline import get_model
 from helpers.utils import mixstyle
