@@ -60,9 +60,16 @@ class PLModule(pl.LightningModule):
                          pretrain_final_temp=config.pretrain_final_temp,
                          num_classes=config.num_classes)
         
+        self.device_ids = ['a', 'b', 'c', 's1', 's2', 's3', 's4', 's5', 's6']
         self.label_ids = ['airport', 'bus', 'metro', 'metro_station', 'park', 'public_square', 'shopping_mall',
                           'street_pedestrian', 'street_traffic', 'tram']
+        self.device_groups = {'a': "real", 'b': "real", 'c': "real",
+                              's1': "seen", 's2': "seen", 's3': "seen",
+                              's4': "unseen", 's5': "unseen", 's6': "unseen"}
+        self.calc_device_info = True
         self.epoch = 0
+        self.training_step_outputs = []
+        self.validation_step_outputs = []
         self.test_step_outputs = []
         
     def mel_forward(self, x):
@@ -112,13 +119,30 @@ class PLModule(pl.LightningModule):
         _, preds = torch.max(y_hat, dim=1)
         n_correct_pred = (preds == y).sum()
         results = {"loss": loss, "n_correct_pred": n_correct_pred, "n_pred": len(y)}
-        
+        if self.calc_device_info:
+            devices = [d.rsplit("-", 1)[1][:-4] for d in files]
+
+            for d in self.device_ids:
+                results["devloss." + d] = torch.as_tensor(0., device=self.device)
+                results["devcnt." + d] = torch.as_tensor(0., device=self.device)
+
+            for i, d in enumerate(devices):
+                results["devloss." + d] = results["devloss." + d] + samples_loss[i]
+                results["devcnt." + d] = results["devcnt." + d] + 1.
+
         return results
     def training_epoch_end(self, outputs):
         avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
 
         train_acc = sum([x['n_correct_pred'] for x in outputs]) * 1.0 / sum(x['n_pred'] for x in outputs)
         logs = {'train.loss': avg_loss, 'train_acc': train_acc}
+        if self.calc_device_info:
+            for d in self.device_ids:
+                dev_loss = torch.stack([x["devloss." + d] for x in outputs]).sum()
+                dev_cnt = torch.stack([x["devcnt." + d] for x in outputs]).sum()
+                logs["tloss." + d] = dev_loss / dev_cnt
+                logs["tcnt." + d] = dev_cnt
+
         self.log_dict(logs)
 
         print(f"Training Loss: {avg_loss}")
@@ -174,13 +198,29 @@ class PLModule(pl.LightningModule):
         n_correct_per_sample = (preds == labels)
         n_correct = n_correct_per_sample.sum()
 
-        
+        dev_names = [d.rsplit("-", 1)[1][:-4] for d in files]
         results = {'loss': samples_loss.mean(), "n_correct": n_correct,
                    "n_pred": torch.as_tensor(len(labels), device=self.device)}
+
+        # log metric per device and scene
+        for d in self.device_ids:
+            results["devloss." + d] = torch.as_tensor(0., device=self.device)
+            results["devcnt." + d] = torch.as_tensor(0., device=self.device)
+            results["devn_correct." + d] = torch.as_tensor(0., device=self.device)
+        for i, d in enumerate(dev_names):
+            results["devloss." + d] = results["devloss." + d] + samples_loss[i]
+            results["devn_correct." + d] = results["devn_correct." + d] + n_correct_per_sample[i]
+            results["devcnt." + d] = results["devcnt." + d] + 1
+
         for l in self.label_ids:
             results["lblloss." + l] = torch.as_tensor(0., device=self.device)
             results["lblcnt." + l] = torch.as_tensor(0., device=self.device)
             results["lbln_correct." + l] = torch.as_tensor(0., device=self.device)
+        for i, l in enumerate(labels):
+            results["lblloss." + self.label_ids[l]] = results["lblloss." + self.label_ids[l]] + samples_loss[i]
+            results["lbln_correct." + self.label_ids[l]] = \
+                results["lbln_correct." + self.label_ids[l]] + n_correct_per_sample[i]
+            results["lblcnt." + self.label_ids[l]] = results["lblcnt." + self.label_ids[l]] + 1
         self.test_step_outputs.append(results)
         
     def on_test_epoch_end(self):
@@ -196,6 +236,32 @@ class PLModule(pl.LightningModule):
         acc = sum(outputs['n_correct']) * 1.0 / sum(outputs['n_pred'])
 
         logs = {'acc': acc, 'loss': avg_loss}
+
+        # log metric per device and scene
+        for d in self.device_ids:
+            dev_loss = outputs["devloss." + d].sum()
+            dev_cnt = outputs["devcnt." + d].sum()
+            dev_corrct = outputs["devn_correct." + d].sum()
+            logs["loss." + d] = dev_loss / dev_cnt
+            logs["acc." + d] = dev_corrct / dev_cnt
+            logs["cnt." + d] = dev_cnt
+            # device groups
+            logs["acc." + self.device_groups[d]] = logs.get("acc." + self.device_groups[d], 0.) + dev_corrct
+            logs["count." + self.device_groups[d]] = logs.get("count." + self.device_groups[d], 0.) + dev_cnt
+            logs["lloss." + self.device_groups[d]] = logs.get("lloss." + self.device_groups[d], 0.) + dev_loss
+
+        for d in set(self.device_groups.values()):
+            logs["acc." + d] = logs["acc." + d] / logs["count." + d]
+            logs["lloss." + d] = logs["lloss." + d] / logs["count." + d]
+
+        for l in self.label_ids:
+            lbl_loss = outputs["lblloss." + l].sum()
+            lbl_cnt = outputs["lblcnt." + l].sum()
+            lbl_corrct = outputs["lbln_correct." + l].sum()
+            logs["loss." + l] = lbl_loss / lbl_cnt
+            logs["acc." + l] = lbl_corrct / lbl_cnt
+            logs["cnt." + l] = lbl_cnt
+
         logs["macro_avg_acc"] = torch.mean(torch.stack([logs["acc." + l] for l in self.label_ids]))
         # prefix with 'test' for logging
         self.log_dict({"test/" + k: logs[k] for k in logs})
@@ -293,6 +359,9 @@ def train(config):
     # close file pointer to h5 file 
     close_h5(hf_in)
     # close_h5(hmic_in)
+    
+    wandb.finish()
+
 def evaluate(config):
     import os
     from sklearn import preprocessing
@@ -402,7 +471,7 @@ if __name__ == '__main__':
     
     # evaluation
     parser.add_argument('--evaluate', action='store_true')  # predictions on eval set
-    parser.add_argument('--ckpt_id',type= str, default='vwc5c4jy')
+    parser.add_argument('--ckpt_id',type= str, default=None)
     
     # training
     parser.add_argument('--pretrained', action='store_true', default=True) # Pre-trained on AS
