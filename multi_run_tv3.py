@@ -32,9 +32,14 @@ def run_multiple_scripts(script_name, base_args, ckpt_experiment_pairs, num_repe
     except Exception as e:
         print(f"An error occurred: {e}")
 
+### How to use this script###
+# 1. Check the script name to ensure you are distilling from the correct teacher ensemble
+# 2. Check base args for subset and augmentations
+# 3. Check model variants and individual Checkpoint IDs
+
 if __name__ == "__main__":
     # Define the script to run
-    script_name = 'run_passt_KD_Cochl_TAU_FT_subsets_DIR_FMS_h5_tv3.py'
+    script_name = 'run_training_KD_gpu_h5_tv3.py'
     
     # Base arguments (common to all runs, except experiment name and ckpt_id)
     base_args = ["--subset", "5", "--dir_prob", "0.6", "--mixstyle_p", "0.4"]
