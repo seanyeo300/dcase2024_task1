@@ -317,16 +317,16 @@ def train(config):
                          batch_size=config.batch_size,
                          pin_memory=True)
     # create pytorch lightening module
-    
-    if config.ckpt_id is not None:
+    ckpt_id = None if config.ckpt_id == "None" else config.ckpt_id
+    if ckpt_id is not None:
         ckpt_dir = os.path.join(config.project_name, config.ckpt_id, "checkpoints")
         assert os.path.exists(ckpt_dir), f"No such folder: {ckpt_dir}"
+        #ckpt_file = os.path.join(ckpt_dir, "last.ckpt")
         for file in os.listdir(ckpt_dir):
             if "epoch" in file:
                 ckpt_file = os.path.join(ckpt_dir,file) # choosing the best model ckpt
                 print(f"found ckpt file: {file}")
         pl_module = PLModule.load_from_checkpoint(ckpt_file, config=config)
-        # pl_module = load_and_modify_checkpoint(pl_module, 10)
     else:
         pl_module = PLModule(config) # this initializes the model pre-trained on audioset
 
@@ -471,7 +471,7 @@ if __name__ == '__main__':
     
     # evaluation
     parser.add_argument('--evaluate', action='store_true')  # predictions on eval set
-    parser.add_argument('--ckpt_id',type= str, default=None)
+    parser.add_argument('--ckpt_id', type=str, required=False, default=None)
     
     # training
     parser.add_argument('--pretrained', action='store_true', default=True) # Pre-trained on AS

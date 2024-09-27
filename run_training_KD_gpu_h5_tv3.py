@@ -387,14 +387,18 @@ def train(config):
     ############ h5 edit end #################
 
     # create pytorch lightening module
-    # ckpt_dir = os.path.join(config.project_name, config.ckpt_id, "checkpoints")
-    # assert os.path.exists(ckpt_dir), f"No such folder: {ckpt_dir}"
-    # #ckpt_file = os.path.join(ckpt_dir, "last.ckpt")
-    # for file in os.listdir(ckpt_dir):
-    #     if "epoch" in file:
-    #         ckpt_file = os.path.join(ckpt_dir,file) # choosing the best model ckpt
-    #         print(f"found ckpt file: {file}")
-    pl_module = PLModule(config)
+    ckpt_id = None if config.ckpt_id == "None" else config.ckpt_id
+    if ckpt_id is not None:
+        ckpt_dir = os.path.join(config.project_name, config.ckpt_id, "checkpoints")
+        assert os.path.exists(ckpt_dir), f"No such folder: {ckpt_dir}"
+        #ckpt_file = os.path.join(ckpt_dir, "last.ckpt")
+        for file in os.listdir(ckpt_dir):
+            if "epoch" in file:
+                ckpt_file = os.path.join(ckpt_dir,file) # choosing the best model ckpt
+                print(f"found ckpt file: {file}")
+        pl_module = PLModule.load_from_checkpoint(ckpt_file, config=config)
+    else:
+        pl_module = PLModule(config) # this initializes the model pre-trained on audioset
     # pl_module = PLModule.load_from_checkpoint(ckpt_file, config=config)
     # get model complexity from nessi and log results to wandb
     sample = next(iter(test_dl))[0][0].unsqueeze(0)
@@ -539,7 +543,7 @@ if __name__ == '__main__':
 
     # evaluation
     parser.add_argument('--evaluate', action='store_true')  # predictions on eval set
-    parser.add_argument('--ckpt_id', type=str, default=None)  # for loading trained model, corresponds to wandb id k0r7gu0i
+    parser.add_argument('--ckpt_id', type=str, required=False, default=None)  # for loading trained model, corresponds to wandb id k0r7gu0i
 
     # dataset
     # subset in {100, 50, 25, 10, 5}
