@@ -565,7 +565,7 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="ICASSP_BCBL_Task1")
-    parser.add_argument('--experiment_name', type=str, default="missing_accuracy_investigation_param_default_h5")
+    parser.add_argument('--experiment_name', type=str, default="missing_accuracy_investigation_predict_full_h5")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
 
@@ -599,7 +599,7 @@ if __name__ == '__main__':
 
     # peak learning rate (in cosinge schedule)
     parser.add_argument('--lr', type=float, default=0.005)
-    parser.add_argument('--warmup_steps', type=int, default=2000) # default = 2000, divide by 20 for 5% subset, 10 for 10%, 4 for 25%, 2 for 50%
+    parser.add_argument('--warmup_steps', type=int, default=100) # default = 2000, divide by 20 for 5% subset, 10 for 10%, 4 for 25%, 2 for 50%
 
     # preprocessing
     parser.add_argument('--sample_rate', type=int, default=32000) #default = 32000
