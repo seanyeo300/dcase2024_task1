@@ -135,15 +135,17 @@ class PLModule(pl.LightningModule):
         if self.config.mixstyle_p > 0:
             # frequency mixstyle
             x = mixstyle(x, self.config.mixstyle_p, self.config.mixstyle_alpha)
-        inputs, targets_a, targets_b, lam = mixup_data(x, labels,
-                                                       self.config.mixup_alpha, use_cuda=True)
-        inputs, targets_a, targets_b = map(Variable, (inputs,
-                                                      targets_a, targets_b))
-        y_hat = self.model(x.cuda())
-        loss = self.mixup_criterion(criterion, y_hat, targets_a, targets_b, lam)
-        
-        # samples_loss = F.cross_entropy(y_hat, labels, reduction="none")
-        # loss = samples_loss.mean()
+        if self.config.mixup:
+            inputs, targets_a, targets_b, lam = mixup_data(x, labels,
+                                                        self.config.mixup_alpha, use_cuda=True)
+            inputs, targets_a, targets_b = map(Variable, (inputs,
+                                                        targets_a, targets_b))
+            y_hat = self.model(x.cuda())
+            loss = self.mixup_criterion(criterion, y_hat, targets_a, targets_b, lam)
+        else:
+            y_hat = self.model(x.cuda())
+            samples_loss = F.cross_entropy(y_hat, labels, reduction="none")
+            loss = samples_loss.mean()
 
         self.log("lr", self.trainer.optimizers[0].param_groups[0]['lr'])
         self.log("epoch", self.current_epoch)
@@ -446,7 +448,6 @@ def train(config):
     # log MACs and number of parameters for our model
     wandb_logger.experiment.config['MACs'] = macs
     wandb_logger.experiment.config['Parameters'] = params
-
     # create the pytorch lightening trainer by specifying the number of epochs to train, the logger,
     # on which kind of device(s) to train and possible callbacks
     trainer = pl.Trainer(max_epochs=config.n_epochs,
@@ -565,7 +566,7 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="ICASSP_BCBL_Task1")
-    parser.add_argument('--experiment_name', type=str, default="missing_accuracy_investigation_predict_full_h5")
+    parser.add_argument('--experiment_name', type=str, default="sBCBL_FTtau_FMS_DIR_Mixup_fixh5")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
 
@@ -593,8 +594,8 @@ if __name__ == '__main__':
     parser.add_argument('--mixstyle_alpha', type=float, default=0.3)
     parser.add_argument('--weight_decay', type=float, default=0.0001)
     parser.add_argument('--roll_sec', type=int, default=0.1)  # roll waveform over time, default = 0.1
-    parser.add_argument('--dir_prob', type=float, default=0)  # prob. to apply device impulse response augmentation, default = 0.6
-    parser.add_argument('--mixup',type=bool, default =0)
+    parser.add_argument('--dir_prob', type=float, default=0.6)  # prob. to apply device impulse response augmentation, default = 0.6
+    parser.add_argument('--mixup',action='store_true', default =False)
     parser.add_argument('--mixup_alpha', type=float, default=1.0)
 
     # peak learning rate (in cosinge schedule)
