@@ -36,26 +36,29 @@ def run_multiple_scripts(script_name, base_args, ckpt_experiment_pairs, num_repe
 # 1. Check the script name to ensure you are distilling from the correct teacher ensemble
 # 2. Check base args for subset and augmentations
 # 3. Check model variants and individual Checkpoint IDs
+# 4. Check num_repeats
 
 if __name__ == "__main__":
     # Define the script to run
     script_name = 'run_training_KD_gpu_h5_tv3.py'
     
     # Base arguments (common to all runs, except experiment name and ckpt_id)
-    base_args = ["--subset", "5", "--dir_prob", "0.6", "--mixstyle_p", "0.4"]
-    
+    base_args = ["--subset", "5", "--dir_prob", "0.6", "--mixstyle_p", "0.4", "--base_channels", "32"] # this is for the KD process, does not apply to students!!!
     # List of tuples containing checkpoint IDs and their corresponding experiment names
     ckpt_experiment_pairs = [
         # ("fskag87u", "NTU_KD_Var3b-T_DSIT-S_FMS_DIR_sub5_fixh5"),     #DSIT
         # ("leguwmeg", "NTU_KD_Var3b-T_SIT-S_FMS_DIR_sub5_fixh5")       #SIT FMS DIR
-        ("dbl1yun4", "NTU_KD_Var3b-T_SIT-S_FMS_sub5_fixh5"),          #SIT FMS
+        # ("dbl1yun4", "NTU_KD_Var3b-T_SIT-S_FMS_sub5_fixh5"),          #SIT FMS
         # ("lm7o54or", "NTU_KD_Var3b-T_SeqFT-S_FMS_DIR_sub5_fixh5"),    #SeqFT    
-        # ("f5hhbj59", "NTU_KD_Var3b-T_FTtau-S_FMS_DIR_sub5_fixh5")       #FTtau
-        # (None, "NTU_KD_Var3b-T_PTas-S_FMS_DIR_sub5_fixh5")            #Ptau
+        # ("ke771aaz", "NTU_KD_Var3b-T_FTtau-S_FMS_DIR_sub10_fixh5")       #FTtau FMS DIR
+        # ("y7frm0sm", "NTU_KD_Var3b-T_FTtau-S_FMS_sub5_fixh5"), #FTtau FMS
+        # ("eqov5ca2", "NTU_KD_Var3b-T_FTtau-S_FMS_DIR_Mixup_sub5_fixh5"), #FTtau FMS DIR MIXUP
+        (None, "NTU_KD_TA3-T_32BCBL-S_FMS_DIR_sub5_fixh5")       #TA3
+        # (None, "NTU_KD_Var3b-T_96BCBLTA_FMS_DIR_sub5_fixh5")            #Ptau
     ]
     
     # Number of times to repeat each experiment
-    num_repeats = 6
+    num_repeats = 1
 
     # Run the script with different checkpoint IDs and experiment names
     run_multiple_scripts(script_name, base_args, ckpt_experiment_pairs, num_repeats)

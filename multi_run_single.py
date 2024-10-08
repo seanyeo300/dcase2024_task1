@@ -42,21 +42,21 @@ if __name__ == "__main__":
     script_name = 'run_training_dev_h5.py'
     # script_name = 'run_passt_cochl_tau_slowfast_subsets_DIR_FMS_h5.py'
     # Base arguments (common to all runs, except experiment name and ckpt_id)
-    base_args = ["--subset", "5", "--dir_prob", "0.6", "--mixstyle_p", "0.4"]
+    base_args = ["--subset", "10", "--dir_prob", "0.6", "--mixstyle_p", "0.4"]
     
     # List of tuples containing checkpoint IDs and their corresponding experiment names
     ckpt_experiment_pairs = [
 
-        ("utupypwc", "NTU_PaSST_FTcs_FTtau_wk50wxro_sub10_FMS_DIR_fixh5"),       #SeqFT 1e-4 
-        ("0r39k52v", "NTU_PaSST_FTcs_FTtau_qrrag30b_sub10_FMS_DIR_fixh5"),       #SeqFT 1e-5 
-        ("6ip7syrn", "NTU_PaSST_FTcs_FTtau_7qghtor2_sub10_FMS_DIR_fixh5"),       #SeqFT 1e-6
-        ("wk50wxro", "NTU_PaSST_SLcs_FTtau_wk50wxro_sub10_FMS_DIR_fixh5"),       #SL 1e-4 SIT
-        ("qrrag30b", "NTU_PaSST_SLcs_FTtau_qrrag30b_sub10_FMS_DIR_fixh5"),       #SL 1e-5 SIT
-        ("7qghtor2", "NTU_PaSST_SLcs_FTtau_7qghtor2_sub10_FMS_DIR_fixh5")        #SL 1e-6 SIT 
-        # ("wk50wxro", "NTU_PaSST_SLcs_SLtau_wk50wxro_sub10_FMS_DIR_fixh5"),       #SL 1e-4 DSIT (half complete, see
-                                                                                   #NTU_passt_SLcs_SLtau_wk50wxro_sub10_FMS_DIR_PretrainedStudent_fixh5)
-        # ("qrrag30b", "NTU_PaSST_SLcs_SLtau_qrrag30b_sub10_FMS_DIR_fixh5"),       #SL 1e-5 DSIT
-        # ("7qghtor2", "NTU_PaSST_SLcs_SLtau_7qghtor2_sub10_FMS_DIR_fixh5")        #SL 1e-6 DSIT
+        # ("utupypwc", "sBCBL_FTcs_FTtau_wk50wxro_sub10_FMS_DIR_fixh5"),       #SeqFT 1e-4 
+        # ("0r39k52v", "sBCBL_FTcs_FTtau_qrrag30b_sub10_FMS_DIR_fixh5"),       #SeqFT 1e-5 
+        # ("6ip7syrn", "sBCBL_FTcs_FTtau_7qghtor2_sub10_FMS_DIR_fixh5"),       #SeqFT 1e-6
+        # ("wk50wxro", "sBCBL_SLcs_FTtau_wk50wxro_sub10_FMS_DIR_fixh5"),       #SL 1e-4 SIT
+        # ("qrrag30b", "sBCBL_SLcs_FTtau_qrrag30b_sub10_FMS_DIR_fixh5"),       #SL 1e-5 SIT
+        # ("7qghtor2", "sBCBL_SLcs_FTtau_7qghtor2_sub10_FMS_DIR_fixh5")        #SL 1e-6 SIT 
+        ("wk50wxro", "sBCBL_SLcs_SLtau_wk50wxro_sub10_FMS_DIR_fixh5"),       #SL 1e-4 DSIT 
+        # ("qrrag30b", "sBCBL_SLcs_SLtau_qrrag30b_sub10_FMS_DIR_fixh5"),       #SL 1e-5 DSIT
+        # ("7qghtor2", "sBCBL_SLcs_SLtau_7qghtor2_sub10_FMS_DIR_fixh5")        #SL 1e-6 DSIT
+        # (None, "sBCBL_FTtau_sub10_FMS_DIR_fixh5")                              #PTau First model trained used mixup, have disabled default mixup for the next 5
 
     ] 
     
