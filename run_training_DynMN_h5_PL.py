@@ -91,7 +91,7 @@ class PLModule(pl.LightningModule):
     
     def training_step(self, batch, batch_idx):
     
-        x, f, y, dev, city, index = batch
+        x, files, y, dev, city, index = batch
         bs = x.size(0)
         y=y.long()
         x = self.mel_forward(x)
@@ -461,13 +461,13 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="NTU_ASC24_DynMN")
-    parser.add_argument('--experiment_name', type=str, default="tDynMN_FTtau_32K_FMS_h5_pl")
+    parser.add_argument('--experiment_name', type=str, default="tDynMN_FTtau_32K_FMS_sub5_fixh5")
     parser.add_argument('--cuda', action='store_true', default=True)
     parser.add_argument('--batch_size', type=int, default=48) # default = 32 ; JS = 48
     parser.add_argument('--num_workers', type=int, default=0)
     parser.add_argument('--cache_path', type=str, default=None)
     parser.add_argument('--num_classes',type=int,default=10)
-    parser.add_argument('--subset', default=5)
+    parser.add_argument('--subset', type=int, default=5)
     
     # evaluation
     parser.add_argument('--evaluate', action='store_true')  # predictions on eval set
