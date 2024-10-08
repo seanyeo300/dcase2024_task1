@@ -33,8 +33,8 @@ dataset_config = {
     #sub5
     # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_PASST_tv1.pt") # 
     # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_model_tv2b.pt") # tv2 
-    # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_model_tv3b.pt") # tv3
-    
+    "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_model_tv3b.pt") # tv3
+    # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_PASST_TA3.pt")  #TA3
     #sub10
     # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_PASST_tv1.pt") # 
     # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_model_tv2b.pt") # tv2 
@@ -44,7 +44,7 @@ dataset_config = {
     # "logits_file": os.path.join("predictions","ensemble", "sub25_ensemble_6_model_tv1.pt") # tv1
     # "logits_file": os.path.join("predictions","ensemble", "sub25_ensemble_6_model_tv2b.pt") # tv2 
     # "logits_file": os.path.join("predictions","ensemble", "sub25_ensemble_6_model_tv3b.pt") # tv3
-    "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_PASST_TA3.pt")  #TA3
+    
     #sub50
     # "logits_file": os.path.join("predictions","ensemble", "sub50_ensemble_6_model_tv1.pt") # tv1
     # "logits_file": os.path.join("predictions","ensemble", "sub50_ensemble_6_model_tv2b.pt") # tv2 
