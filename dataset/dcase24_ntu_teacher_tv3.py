@@ -33,14 +33,9 @@ dataset_config = {
     #sub5
     # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_PASST_tv1.pt") # 
     # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_model_tv2b.pt") # tv2 
-<<<<<<< Updated upstream
-    "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_model_tv3b.pt") # tv3
-    # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_PASST_TA3.pt")  #TA3
-=======
     # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_model_tv3b.pt") # tv3
     "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_PASST_TA3.pt")  #TA3
     
->>>>>>> Stashed changes
     #sub10
     # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_PASST_tv1.pt") # 
     # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_model_tv2b.pt") # tv2 
