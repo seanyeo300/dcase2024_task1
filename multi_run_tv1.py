@@ -62,10 +62,11 @@ def run_multiple_scripts(script_name, base_args, ckpt_experiment_pairs, num_repe
 
 if __name__ == "__main__":
     # Define the script to run
-    script_name = 'run_training_KD_gpu_h5_tv1.py'
+    # script_name = 'run_training_KD_gpu_h5_tv1.py'
+    script_name = 'run_training_DynMN_h5_KD_tv1.py'
     
     # Base arguments (common to all runs, except experiment name and ckpt_id)
-    base_args = ["--subset", "5", "--dir_prob", "0.6", "--mixstyle_p", "0.4", "--base_channels", "864", "--batch_size", "64"] # this is for the KD process, does not apply to students!!!
+    base_args = ["--subset", "5", "--dir_prob", "0.6", "--mixstyle_p", "0.4", "--batch_size", "48"] # this is for the KD process, does not apply to students!!! 
     
     # List of tuples containing checkpoint IDs and their corresponding experiment names
     ckpt_experiment_pairs = [
