@@ -12,8 +12,9 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import LearningRateMonitor
 import torchaudio
 import json
+import torch.nn as nn
 
-from dataset.dcase24_ntu_DynMN import ntu_get_training_set_dir, ntu_get_test_set, ntu_get_eval_set, open_h5, close_h5, dataset_config
+from dataset.dcase24_ntu_DynMN_tv1 import ntu_get_training_set_dir, ntu_get_test_set, ntu_get_eval_set, open_h5, close_h5, dataset_config
 # from models.mn.model import get_model as get_mobilenet
 from models.dymn.model import get_model as get_dymn
 from models.preprocess import AugmentMelSTFT
@@ -66,6 +67,7 @@ class PLModule(pl.LightningModule):
         self.device_groups = {'a': "real", 'b': "real", 'c': "real",
                               's1': "seen", 's2': "seen", 's3': "seen",
                               's4': "unseen", 's5': "unseen", 's6': "unseen"}
+        self.kl_div_loss = nn.KLDivLoss(log_target=True, reduction="none") # KL Divergence loss for soft, check log_target 
         self.calc_device_info = True
         self.epoch = 0
         self.training_step_outputs = []
@@ -95,10 +97,19 @@ class PLModule(pl.LightningModule):
         bs = x.size(0)
         y=y.long()
         x = self.mel_forward(x)
-        if self.config.mixstyle_p > 0:   
+
+        if self.config.mixstyle_p > 0:   # Main KD pipeline with Freq-Mixstyle
             x = mixstyle(x, self.config.mixstyle_p, self.config.mixstyle_alpha)
             y_hat, _ = self.forward(x)
-            samples_loss = F.cross_entropy(y_hat, y, reduction="none")
+            label_loss = F.cross_entropy(y_hat, y, reduction="none").mean() # differs from original impl which means after all losses are calculated
+            with torch.cuda.amp.autocast():
+                y_hat_soft = F.log_softmax(y_hat / self.config.temperature, dim=-1)
+                teacher_logits = F.log_softmax(teacher_logits / self.config.temperature, dim=-1)
+            kd_loss = self.kl_div_loss(y_hat_soft, teacher_logits).mean()
+            kd_loss = kd_loss * (self.config.temperature ** 2)
+            loss = self.config.kd_lambda * label_loss + (1 - self.config.kd_lambda) * kd_loss
+
+
         elif self.config.mixup_alpha:
             rn_indices, lam = mixup(bs, self.config.mixup_alpha)
             lam = lam.to(x.device)
@@ -108,13 +119,18 @@ class PLModule(pl.LightningModule):
             samples_loss = (F.cross_entropy(y_hat, y, reduction="none") * lam.reshape(bs) +
                             F.cross_entropy(y_hat, y[rn_indices], reduction="none") * (
                                         1. - lam.reshape(bs)))
-
+            loss = samples_loss.mean()
         else:
             y_hat, _ = self.forward(x)
-            samples_loss = F.cross_entropy(y_hat, y, reduction="none")
-
+            samples_loss = F.cross_entropy(y_hat, y, reduction="none").mean()
+            with torch.cuda.amp.autocast():
+                y_hat_soft = F.log_softmax(y_hat / self.config.temperature, dim=-1)
+                teacher_logits = F.log_softmax(teacher_logits / self.config.temperature, dim=-1)
+            kd_loss = self.kl_div_loss(y_hat_soft, teacher_logits).mean()
+            kd_loss = kd_loss * (self.config.temperature ** 2)
+            loss = self.config.kd_lambda * label_loss + (1 - self.config.kd_lambda) * kd_loss
         # loss
-        loss = samples_loss.mean()
+        # loss = samples_loss.mean()
         
         _, preds = torch.max(y_hat, dim=1)
         n_correct_pred = (preds == y).sum()
@@ -350,7 +366,7 @@ def train(config):
     trainer = pl.Trainer(max_epochs=config.n_epochs,
                          logger=wandb_logger,
                          accelerator='gpu',
-                         devices=[1],
+                         devices=1,
                          callbacks=[lr_monitor, checkpoint_callback])
     # start training and validation for the specified number of epochs
     trainer.fit(pl_module, train_dl, test_dl)
@@ -461,7 +477,7 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="NTU_ASC24_DynMN")
-    parser.add_argument('--experiment_name', type=str, default="tDynMN_FTtau_32K_FMS_DIR_sub5_fixh5")
+    parser.add_argument('--experiment_name', type=str, default="NTU_KD_tv1b-T_DyMN20_FTtau_32K_FMS_DIR_sub5_fixh5")
     parser.add_argument('--cuda', action='store_true', default=True)
     parser.add_argument('--batch_size', type=int, default=48) # default = 32 ; JS = 48
     parser.add_argument('--num_workers', type=int, default=0)
@@ -489,6 +505,10 @@ if __name__ == '__main__':
     parser.add_argument('--gain_augment', type=int, default=12)
     parser.add_argument('--weight_decay', type=int, default=0.0) #ADAM, no WD
     parser.add_argument('--dir_prob', type=float, default=0)  # prob. to apply device impulse response augmentation, default for TAU = 0.6 ; JS does not use it
+    
+    #Knowledge Distillation
+    parser.add_argument('--temperature', type=float, default=2.0)
+    parser.add_argument('--kd_lambda', type=float, default=0.02) # default is 0.02
 
     # lr schedule
     parser.add_argument('--lr', type=float, default=1e-4) # JS setting, TAU'19 = 0.003
