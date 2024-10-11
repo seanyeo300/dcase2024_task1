@@ -13,9 +13,9 @@ if __name__ == "__main__":
     scripts_to_run = [
         # ('get_logits.py', ['--evaluate', '--ckpt_id', 'qi2qx93m']),
         # ('get_logits.py', ['--evaluate', '--ckpt_id', 'gc41eep8','--subset','5']),
-        # ('get_logits.py', ['--evaluate', '--ckpt_id', 'r0ina4uc','--subset','5']),
-        ('get_logits.py', ['--evaluate', '--ckpt_id', 'kybgcsn2','--subset','5']),
-        ('get_logits.py', ['--evaluate', '--ckpt_id', '7ltm2p1l','--subset','5'])
+        # ('get_logits.py', ['--evaluate', '--ckpt_id', 'wn7gqg5y','--subset','5',"--base_channels", "96"]),
+        # ('get_logits.py', ['--evaluate', '--ckpt_id', 'phbu0vl2','--subset','5',"--base_channels", "96"]),
+        ('get_logits.py', ['--evaluate', '--ckpt_id', 'hx1xuegl','--subset','5',"--base_channels", "96"])
     ]
     run_multiple_scripts(scripts_to_run)
 
