@@ -488,7 +488,7 @@ if __name__ == '__main__':
     parser.add_argument('--no_wavmix', action='store_true', default=True) #enforces no mixup
     parser.add_argument('--gain_augment', type=int, default=12)
     parser.add_argument('--weight_decay', type=int, default=0.0) #ADAM, no WD
-    parser.add_argument('--dir_prob', type=float, default=0)  # prob. to apply device impulse response augmentation, default for TAU = 0.6 ; JS does not use it
+    parser.add_argument('--dir_prob', type=float, default=0.6)  # prob. to apply device impulse response augmentation, default for TAU = 0.6 ; JS does not use it
 
     # lr schedule
     parser.add_argument('--lr', type=float, default=1e-4) # JS setting, TAU'19 = 0.003
