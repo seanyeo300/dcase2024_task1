@@ -13,8 +13,8 @@ import pathlib
 import h5py
 from dataset.helpers.audiodatasets import PreprocessDataset, get_gain_augment_func, get_roll_func
 
-# dataset_dir = r"D:\Sean\DCASE\datasets\Extract_to_Folder\TAU-urban-acoustic-scenes-2022-mobile-development" # Alibaba
-dataset_dir = r"F:\DCASE\2024\Datasets\TAU-urban-acoustic-scenes-2022-mobile-development" # DSP
+dataset_dir = r"D:\Sean\DCASE\datasets\Extract_to_Folder\TAU-urban-acoustic-scenes-2022-mobile-development" # Alibaba
+# dataset_dir = r"F:\DCASE\2024\Datasets\TAU-urban-acoustic-scenes-2022-mobile-development" # DSP
 assert dataset_dir is not None, "Specify 'TAU Urban Acoustic Scenes 2022 Mobile dataset' location in variable " \
                                 "'dataset_dir'. The dataset can be downloaded from this URL:" \
                                 " https://zenodo.org/record/6337421"
@@ -84,7 +84,7 @@ class DIRAugmentDataset(TorchDataset):
         self.prob = prob
 
     def __getitem__(self, index):
-        x, file, label, device, city, logits = self.ds[index]
+        x, file, label, device, city, indices, logits = self.ds[index]
 
         fsplit = file.rsplit("-", 1)
         device = fsplit[1][:-4]
@@ -93,10 +93,11 @@ class DIRAugmentDataset(TorchDataset):
             # choose a DIR at random
             dir_idx = int(np.random.randint(0, len(self.dirs)))
             dir = self.dirs[dir_idx]
-
+            if dir is not None:
+                print("dir is working")
             x = convolve(x, dir, 'full')[:, :x.shape[1]]
             x = torch.from_numpy(x)
-        return x, file, label, device, city, logits
+        return x, file, label, device, city, indices, logits
 
     def __len__(self):
         return len(self.ds)
@@ -122,8 +123,8 @@ class AddLogitsDataset(TorchDataset):
         self.map_indices = map_indices
 
     def __getitem__(self, index):
-        x, file, label, device, city = self.dataset[index]
-        return x, file, label, device, city, self.logits[self.map_indices[index]]
+        x, file, label, device, city, indices = self.dataset[index]
+        return x, file, label, device, city, indices, self.logits[self.map_indices[index]]
 
     def __len__(self):
         return len(self.dataset)
@@ -190,9 +191,9 @@ class RollDataset(TorchDataset):
         self.axis = axis
 
     def __getitem__(self, index):
-        x, file, label, device, city, indices = self.dataset[index]
+        x, file, label, device, city, indices, logits = self.dataset[index]
         sf = int(np.random.random_integers(-self.shift_range, self.shift_range))
-        return x.roll(sf, self.axis), file, label, device, city, indices
+        return x.roll(sf, self.axis), file, label, device, city, indices, logits
 
     def __len__(self):
         return len(self.dataset)
@@ -384,8 +385,8 @@ def ntu_get_base_training_set(meta_csv, train_files_csv, hf_in, wavmix): # this 
     train_subset_indices = list(meta[meta['filename'].isin(train_files)].index)
     ds = SimpleSelectionDataset(BasicDCASE24Dataseth5(meta_csv, hf_in),
                                 train_subset_indices) # return x, file, label, device, city, self.available_indices[index] (6 items)
-    # if not wavmix:
-    #     ds = AddLogitsDataset(ds, train_subset_indices, dataset_config['logits_file'])
+    if not wavmix:
+        ds = AddLogitsDataset(ds, train_subset_indices, dataset_config['logits_file'])
     return ds
 
 def ntu_get_test_set(hf_in = None):
