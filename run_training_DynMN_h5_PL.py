@@ -91,7 +91,7 @@ class PLModule(pl.LightningModule):
     
     def training_step(self, batch, batch_idx):
     
-        x, files, y, dev, city, index = batch
+        x, files, y, dev, city, index , logits = batch
         bs = x.size(0)
         y=y.long()
         x = self.mel_forward(x)
@@ -299,12 +299,12 @@ def train(config):
                                                   "the given subsets."
     # get pointer to h5 file containing audio samples
     hf_in = open_h5('h5py_audio_wav')
-    # hmic_in = open_h5('h5py_mic_wav_1')
+    hmic_in = open_h5('h5py_mic_wav_1')
     # dataloader
     train_dl = DataLoader(dataset=ntu_get_training_set_dir(config.subset, config.dir_prob,
                                                     roll=False if config.no_roll else True,
                                                     wavmix=False if config.no_wavmix else True,
-                                                    gain_augment=config.gain_augment, hf_in=hf_in, hmic_in=None),               
+                                                    gain_augment=config.gain_augment, hf_in=hf_in, hmic_in=hmic_in),               
                           worker_init_fn=worker_init_fn,
                           num_workers=config.num_workers,
                           batch_size=config.batch_size,
@@ -350,7 +350,7 @@ def train(config):
     trainer = pl.Trainer(max_epochs=config.n_epochs,
                          logger=wandb_logger,
                          accelerator='gpu',
-                         devices=1,
+                         devices=[1],
                          callbacks=[lr_monitor, checkpoint_callback])
     # start training and validation for the specified number of epochs
     trainer.fit(pl_module, train_dl, test_dl)
@@ -358,7 +358,7 @@ def train(config):
     ############ h5 edit end #################
     # close file pointer to h5 file 
     close_h5(hf_in)
-    # close_h5(hmic_in)
+    close_h5(hmic_in)
     
     wandb.finish()
 
@@ -461,7 +461,7 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="NTU_ASC24_DynMN")
-    parser.add_argument('--experiment_name', type=str, default="tDynMN_FTtau_32K_FMS_sub5_fixh5")
+    parser.add_argument('--experiment_name', type=str, default="tDynMN_FTtau_32K_FMS_DIR_sub5_fixh5")
     parser.add_argument('--cuda', action='store_true', default=True)
     parser.add_argument('--batch_size', type=int, default=48) # default = 32 ; JS = 48
     parser.add_argument('--num_workers', type=int, default=0)
