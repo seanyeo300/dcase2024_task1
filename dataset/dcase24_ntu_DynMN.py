@@ -48,7 +48,7 @@ class DirDataset(TorchDataset):
         self.dir_p = dir_p
 
     def __getitem__(self, index):
-        x, file, label, device, city, indices = self.ds[index]
+        x, file, label, device, city, indices, logits = self.ds[index]
         fsplit = file.rsplit("-", 1)
         device = fsplit[1][:-4]
 
@@ -69,7 +69,7 @@ class DirDataset(TorchDataset):
             # get audio file with 'new' mic response
             x = convolve(x, dir, 'full')[:, :x.shape[1]]
             x = torch.from_numpy(x)
-        return x, file, label, device, city, indices
+        return x, file, label, device, city, indices, logits
     def __len__(self):
         return len(self.ds)  
 

@@ -461,7 +461,7 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="NTU_ASC24_DynMN")
-    parser.add_argument('--experiment_name', type=str, default="tDynMN_FTtau_32K_FMS_DIR_sub5_fixh5")
+    parser.add_argument('--experiment_name', type=str, default="tDynMN10_FTtau_32K_FMS_DIR_sub5_fixh5")
     parser.add_argument('--cuda', action='store_true', default=True)
     parser.add_argument('--batch_size', type=int, default=48) # default = 32 ; JS = 48
     parser.add_argument('--num_workers', type=int, default=0)
@@ -475,7 +475,7 @@ if __name__ == '__main__':
     
     # training
     parser.add_argument('--pretrained', action='store_true', default=True) # Pre-trained on AS
-    parser.add_argument('--model_name', type=str, default="dymn20_as") # Best MAP model
+    parser.add_argument('--model_name', type=str, default="dymn10_as") # Best MAP model
     parser.add_argument('--pretrain_final_temp', type=float, default=1.0)  # for DyMN
     parser.add_argument('--model_width', type=float, default=1.0)
     parser.add_argument('--head_type', type=str, default="mlp")
