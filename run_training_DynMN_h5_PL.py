@@ -350,7 +350,7 @@ def train(config):
     trainer = pl.Trainer(max_epochs=config.n_epochs,
                          logger=wandb_logger,
                          accelerator='gpu',
-                         devices=[1],
+                         devices=1,
                          callbacks=[lr_monitor, checkpoint_callback])
     # start training and validation for the specified number of epochs
     trainer.fit(pl_module, train_dl, test_dl)

@@ -57,7 +57,7 @@ class DirDataset(TorchDataset):
             all_keys = list(self.hmic.keys())
             # Choose a random key
             dir_key = np.random.choice(all_keys)
-            print(f"Selected DIR key: {dir_key}")
+            # print(f"Selected DIR key: {dir_key}")
             
             # Retrieve the corresponding DIR using the key
             dir = torch.from_numpy(self.hmic.get(dir_key)[()])
@@ -93,8 +93,6 @@ class DIRAugmentDataset(TorchDataset):
             # choose a DIR at random
             dir_idx = int(np.random.randint(0, len(self.dirs)))
             dir = self.dirs[dir_idx]
-            if dir is not None:
-                print("dir is working")
             x = convolve(x, dir, 'full')[:, :x.shape[1]]
             x = torch.from_numpy(x)
         return x, file, label, device, city, indices, logits
