@@ -350,7 +350,7 @@ def train(config):
     trainer = pl.Trainer(max_epochs=config.n_epochs,
                          logger=wandb_logger,
                          accelerator='gpu',
-                         devices=1,
+                         devices=[1],
                          callbacks=[lr_monitor, checkpoint_callback])
     # start training and validation for the specified number of epochs
     trainer.fit(pl_module, train_dl, test_dl)
@@ -461,13 +461,13 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="NTU_ASC24_DynMN")
-    parser.add_argument('--experiment_name', type=str, default="tDynMN10_FTtau_32K_FMS_DIR_sub5_fixh5")
+    parser.add_argument('--experiment_name', type=str, default="tDynMN10_FTtau_32K_FMS_DIR_sub10_fixh5")
     parser.add_argument('--cuda', action='store_true', default=True)
     parser.add_argument('--batch_size', type=int, default=48) # default = 32 ; JS = 48
     parser.add_argument('--num_workers', type=int, default=0)
     parser.add_argument('--cache_path', type=str, default=None)
     parser.add_argument('--num_classes',type=int,default=10)
-    parser.add_argument('--subset', type=int, default=5)
+    parser.add_argument('--subset', type=int, default=10)
     
     # evaluation
     parser.add_argument('--evaluate', action='store_true')  # predictions on eval set
