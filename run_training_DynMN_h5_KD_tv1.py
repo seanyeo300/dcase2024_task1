@@ -93,7 +93,7 @@ class PLModule(pl.LightningModule):
     
     def training_step(self, batch, batch_idx):
     
-        x, files, y, dev, city, index , logits = batch
+        x, files, y, dev, city, index , teacher_logits = batch
         bs = x.size(0)
         y=y.long()
         x = self.mel_forward(x)
@@ -108,7 +108,7 @@ class PLModule(pl.LightningModule):
             kd_loss = self.kl_div_loss(y_hat_soft, teacher_logits).mean()
             kd_loss = kd_loss * (self.config.temperature ** 2)
             loss = self.config.kd_lambda * label_loss + (1 - self.config.kd_lambda) * kd_loss
-
+            samples_loss = loss
 
         elif self.config.mixup_alpha:
             rn_indices, lam = mixup(bs, self.config.mixup_alpha)
@@ -366,7 +366,7 @@ def train(config):
     trainer = pl.Trainer(max_epochs=config.n_epochs,
                          logger=wandb_logger,
                          accelerator='gpu',
-                         devices=1,
+                         devices=eval(config.gpu),
                          callbacks=[lr_monitor, checkpoint_callback])
     # start training and validation for the specified number of epochs
     trainer.fit(pl_module, train_dl, test_dl)
@@ -505,7 +505,7 @@ if __name__ == '__main__':
     parser.add_argument('--gain_augment', type=int, default=12)
     parser.add_argument('--weight_decay', type=int, default=0.0) #ADAM, no WD
     parser.add_argument('--dir_prob', type=float, default=0)  # prob. to apply device impulse response augmentation, default for TAU = 0.6 ; JS does not use it
-    
+    parser.add_argument('--gpu', type=str, default='[0]')
     #Knowledge Distillation
     parser.add_argument('--temperature', type=float, default=2.0)
     parser.add_argument('--kd_lambda', type=float, default=0.02) # default is 0.02
