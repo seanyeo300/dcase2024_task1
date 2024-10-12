@@ -62,10 +62,11 @@ def run_multiple_scripts(script_name, base_args, ckpt_experiment_pairs, num_repe
 
 if __name__ == "__main__":
     # Define the script to run
-    script_name = 'run_training_KD_gpu_h5_tv2.py'
+    # script_name = 'run_training_KD_gpu_h5_tv2.py'
+    script_name = 'run_training_DynMN_h5_KD_tv2.py'
     
     # Base arguments (common to all runs, except experiment name and ckpt_id)
-    base_args = ["--subset", "5", "--dir_prob", "0.6", "--mixstyle_p", "0.4", "--base_channels", "864", "--batch_size", "64"] # this is for the KD process, does not apply to students!!!
+    base_args = ['--gpu','[0]',"--subset", "5", "--dir_prob", "0.6", "--mixstyle_p", "0.4", "--batch_size", "48","--model_name", "dymn20_as"] # this is for the KD process, does not apply to students!!! 
     # List of tuples containing checkpoint IDs and their corresponding experiment names
     ckpt_experiment_pairs = [
         # ("fskag87u", "NTU_KD_Var2b-T_DSIT-S_FMS_DIR_sub5_fixh5"), #DSIT
@@ -77,11 +78,11 @@ if __name__ == "__main__":
         # ("eqov5ca2", "NTU_KD_Var2b-T_FTtau-S_FMS_DIR_Mixup_sub5_fixh5"), #FTtau FMS DIR MIXUP
         # (None, "NTU_KD_tv2c-T_32BCBL-S_FMS_DIR_sub5_fixh5")          #tv2c
         # (None, "NTU_KD_TA2-T_32BCBL-S_FMS_DIR_sub5_fixh5")       #TA2
-        (None, "NTU_KD_tv2c-T_864BCBL-TA_FMS_DIR_sub5_fixh5")          # 96 BC TA #change batch size to 128 or lower to fit model into gpu
+        (None, "NTU_KD_tv2c-T_DyMN20-TA_FMS_DIR_sub5_fixh5")     # Dymn20 tv2c
     ]
     
     # Number of times to repeat each experiment
-    num_repeats = 6
+    num_repeats = 3
 
     # Run the script with different checkpoint IDs and experiment names
     run_multiple_scripts(script_name, base_args, ckpt_experiment_pairs, num_repeats)
