@@ -54,8 +54,11 @@ class PLModule(pl.LightningModule):
         
         # logic for loading DyMN
         self.model_name = config.model_name
+        if config.pretrained:
+            print(f"pre-trained is {config.pretrained}")
         self.pretrained_name = self.model_name if config.pretrained else None
         self.width = NAME_TO_WIDTH(self.model_name) if self.model_name and config.pretrained else config.model_width
+        print(f"DyMn with model width: {self.width}")
         self.model = get_dymn(width_mult=self.width, pretrained_name=self.pretrained_name,
                          pretrain_final_temp=config.pretrain_final_temp,
                          num_classes=config.num_classes)
@@ -350,7 +353,7 @@ def train(config):
     trainer = pl.Trainer(max_epochs=config.n_epochs,
                          logger=wandb_logger,
                          accelerator='gpu',
-                         devices=[1],
+                         devices=eval(config.gpu),
                          callbacks=[lr_monitor, checkpoint_callback])
     # start training and validation for the specified number of epochs
     trainer.fit(pl_module, train_dl, test_dl)
@@ -461,7 +464,7 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="NTU_ASC24_DynMN")
-    parser.add_argument('--experiment_name', type=str, default="tDynMN10_FTtau_32K_FMS_DIR_sub10_fixh5")
+    parser.add_argument('--experiment_name', type=str, default="tDynMN20_FTtau_32K_FMS_DIR_sub10_fixh5")
     parser.add_argument('--cuda', action='store_true', default=True)
     parser.add_argument('--batch_size', type=int, default=48) # default = 32 ; JS = 48
     parser.add_argument('--num_workers', type=int, default=0)
@@ -474,7 +477,7 @@ if __name__ == '__main__':
     parser.add_argument('--ckpt_id', type=str, required=False, default=None)
     
     # training
-    parser.add_argument('--pretrained', action='store_true', default=True) # Pre-trained on AS
+    parser.add_argument('--pretrained', action='store_true', default=False) # Pre-trained on AS
     parser.add_argument('--model_name', type=str, default="dymn10_as") # Best MAP model
     parser.add_argument('--pretrain_final_temp', type=float, default=1.0)  # for DyMN
     parser.add_argument('--model_width', type=float, default=1.0)
@@ -488,8 +491,9 @@ if __name__ == '__main__':
     parser.add_argument('--no_wavmix', action='store_true', default=True) #enforces no mixup
     parser.add_argument('--gain_augment', type=int, default=12)
     parser.add_argument('--weight_decay', type=int, default=0.0) #ADAM, no WD
-    parser.add_argument('--dir_prob', type=float, default=0.6)  # prob. to apply device impulse response augmentation, default for TAU = 0.6 ; JS does not use it
-
+    parser.add_argument('--dir_prob', type=float, default=0.6)  # prob. to apply device impulse response augmentation, default for TAU = 0.6 
+    parser.add_argument('--gpu', type=str, default='[0]')
+    
     # lr schedule
     parser.add_argument('--lr', type=float, default=1e-4) # JS setting, TAU'19 = 0.003
     parser.add_argument('--warm_up_len', type=int, default=10)
@@ -512,6 +516,8 @@ if __name__ == '__main__':
     parser.add_argument('--fmax_aug_range', type=int, default=2000)
 
     args = parser.parse_args()
+    if isinstance(args.pretrained, str) and args.pretrained == "False":
+        args.pretrained = False
     if args.evaluate:
         evaluate(args)
     else:
