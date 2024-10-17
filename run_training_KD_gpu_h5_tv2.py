@@ -413,7 +413,7 @@ def train(config):
     trainer = pl.Trainer(max_epochs=config.n_epochs,
                          logger=wandb_logger,
                          accelerator='gpu',
-                         devices=[0],
+                         devices=eval(config.gpu),
                          num_sanity_val_steps=0,
                          precision=config.precision, detect_anomaly=True,
                          callbacks=[pl.callbacks.ModelCheckpoint(save_last=True, monitor = "val/loss",save_top_k=1),]
@@ -540,7 +540,7 @@ if __name__ == '__main__':
     parser.add_argument('--experiment_name', type=str, default="NTU_Var2b-T_32BCBL-S_FMS_DIR_sub5_fixh5")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
-
+    parser.add_argument('--gpu', type=str, default="[0]")
     # evaluation
     parser.add_argument('--evaluate', action='store_true')  # predictions on eval set
     parser.add_argument('--ckpt_id', type=str, required=False, default=None)  # for loading trained model, corresponds to wandb id k0r7gu0i
