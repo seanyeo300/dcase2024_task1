@@ -18,3 +18,6 @@ h5py_TAU22_128bins
 h5py_cochl_train_mel_10s_128bins
 resources/dymn20_as_mAP_493.pt
 resources/dymn10_as.pt
+resources/dymn04_as.pt
+resources/mn20_as_mAP_478.pt
+resources/mn30_as_mAP_482.pt
