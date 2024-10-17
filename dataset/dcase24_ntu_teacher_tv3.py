@@ -31,26 +31,30 @@ dataset_config = {
     # "logits_file": os.path.join("predictions","ensemble", "ensemble_logits.pt") #specifies where the logit and predictions are stored. 
     
     #sub5
-    # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_PASST_tv1.pt") # 
-    # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_model_tv2b.pt") # tv2 
-    # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_model_tv3b.pt") # tv3
-    # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_PASST_TA3.pt")  #TA3
-    "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_PaSST_TA3_96BCBL.pt")  #TA3 96BCBL
-    
+    # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_PASST_tv1b.pt") # 
+    # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_PASST_tv2c.pt") # tv2c 
+    # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_PaSST_tv3b.pt") # tv3
+    # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_PASST_TA2.pt")  #TA2
+    # "logits_file": os.path.join("predictions","ensemble", "sub5_DyMN20_TA2.pt") # TA2
     #sub10
-    # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_PASST_tv1.pt") # 
-    # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_model_tv2b.pt") # tv2 
-    # "logits_file": os.path.join("predictions","ensemble", "sub10_ensemble_6_model_tv3b.pt") # tv3
+    # "logits_file": os.path.join("predictions","ensemble", "sub10_ensemble_6_PASST_tv1b.pt") # 
+    # "logits_file": os.path.join("predictions","ensemble", "sub10_ensemble_6_PaSST_tv2c.pt") # tv2 
+    # "logits_file": os.path.join("predictions","ensemble", "sub10_ensemble_6_PaSST_tv3b.pt") # tv3
     
     #sub25
-    # "logits_file": os.path.join("predictions","ensemble", "sub25_ensemble_6_model_tv1.pt") # tv1
-    # "logits_file": os.path.join("predictions","ensemble", "sub25_ensemble_6_model_tv2b.pt") # tv2 
-    # "logits_file": os.path.join("predictions","ensemble", "sub25_ensemble_6_model_tv3b.pt") # tv3
+    # "logits_file": os.path.join("predictions","ensemble", "sub25_ensemble_6_PaSST_tv1b.pt")  # tv1
+    # "logits_file": os.path.join("predictions","ensemble", "sub25_ensemble_6_PaSST_tv2c.pt") # tv2 
+    "logits_file": os.path.join("predictions","ensemble", "sub25_ensemble_6_PaSST_tv3b.pt") # tv3
     
     #sub50
-    # "logits_file": os.path.join("predictions","ensemble", "sub50_ensemble_6_model_tv1.pt") # tv1
-    # "logits_file": os.path.join("predictions","ensemble", "sub50_ensemble_6_model_tv2b.pt") # tv2 
-    # "logits_file": os.path.join("predictions","ensemble", "sub50_ensemble_6_model_tv3b.pt") # tv3
+    # "logits_file": os.path.join("predictions","ensemble", "sub50_ensemble_6_PaSST_tv1b.pt") # tv1
+    # "logits_file": os.path.join("predictions","ensemble", "sub50_ensemble_6_PaSST_tv2c.pt") # tv2 
+    # "logits_file": os.path.join("predictions","ensemble", "sub50_ensemble_6_PaSST_tv3b.pt") # tv3
+    
+    #sub100
+    # "logits_file": os.path.join("predictions","ensemble", "sub100_ensemble_6_PaSST_tv1b.pt") # tv1
+    # "logits_file": os.path.join("predictions","ensemble", "sub100_ensemble_6_PaSST_tv2c.pt") # tv2 
+    # "logits_file": os.path.join("predictions","ensemble", "sub100_ensemble_6_PaSST_tv3b.pt") # tv3
     
     # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_tv2.pt") # Continual Learning teacher
     # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_tv3.pt") # Continual Learning teacher sub5_ensemble_12_model_tv5.pt
