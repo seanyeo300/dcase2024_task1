@@ -212,8 +212,8 @@ class PLModule(pl.LightningModule):
         head_params = list(self.model.classifier.parameters())
         # Define the optimizer with parameter groups
         optimizer = torch.optim.Adam([
-            {'params': representation_params, 'lr': self.config.lr_rl},  # Low learning rate for representation layers
-            {'params': head_params, 'lr': self.config.lr_cl},                     # High learning rate for classifier heads
+            {'params': representation_params, 'lr_RL': self.config.lr_RL},  # Low learning rate for representation layers
+            {'params': head_params, 'lr_CL': self.config.lr_CL},                     # High learning rate for classifier heads
         ], weight_decay=self.config.weight_decay)
         # optimizer = torch.optim.Adam(self.parameters(), lr=self.config.lr, weight_decay=self.config.weight_decay) # normal uniform LR optimizer
         # phases of lr schedule: exponential increase, constant lr, linear decrease, fine-tune
@@ -241,8 +241,8 @@ def train(config):
     assert config.subset in {100, 50, 25, 10, 5,"cochl10s"}, "Specify an integer value in: {100, 50, 25, 10, 5} to use one of " \
                                                   "the given subsets."
     # get pointer to h5 file containing audio samples
-    hf_in = open_h5('h5py_audio_wav')
-    # hmic_in = open_h5('h5py_mic_wav_1')
+    hf_in = open_h5('h5py_cochl_train_mel_10s_128bins')
+    hmic_in = open_h5('h5py_mic_wav_1')
     # dataloader
     train_dl = DataLoader(dataset=ntu_get_training_set_dir(config.subset, config.dir_prob,
                                                     roll=False if config.no_roll else True,
@@ -261,7 +261,7 @@ def train(config):
                          pin_memory=True)
     # create pytorch lightening module
     
-    if config.ckpt_id is not None:
+    if config.ckpt_id is not None: # for double SL now called, SIT. Ensure num_classes = 13
         ckpt_dir = os.path.join(config.project_name, config.ckpt_id, "checkpoints")
         assert os.path.exists(ckpt_dir), f"No such folder: {ckpt_dir}"
         for file in os.listdir(ckpt_dir):
@@ -293,7 +293,7 @@ def train(config):
     trainer = pl.Trainer(max_epochs=config.n_epochs,
                          logger=wandb_logger,
                          accelerator='gpu',
-                         devices=1,
+                         devices=eval(config.gpu),
                          callbacks=[lr_monitor, checkpoint_callback])
     # start training and validation for the specified number of epochs
     trainer.fit(pl_module, train_dl, test_dl)
@@ -332,13 +332,13 @@ def evaluate(config):
     ############# h5 edit here ##############
     # Open h5 file once
     hf_in = open_h5('h5py_audio_wav')
-    eval_hf = open_h5('h5py_audio_wav2') # only when obtaining pre-computed train
+    # eval_hf = open_h5('h5py_audio_wav2') # only when obtaining pre-computed train
     # eval_hf = open_h5('h5py_audio_eval_wav')
     # load lightning module from checkpoint
     pl_module = PLModule.load_from_checkpoint(ckpt_file, config=config)
     trainer = pl.Trainer(logger=False,
                          accelerator='gpu',
-                         devices=0,
+                         devices=1,
                          precision=config.precision)
     ############# h5 edit here ##############
     # evaluate lightning module on development-test split
@@ -401,14 +401,14 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="NTU_ASC24_DynMN")
-    parser.add_argument('--experiment_name', type=str, default="tDynMN_FTtau_32K_FMS_h5_pl")
+    parser.add_argument('--experiment_name', type=str, default="tDynMN_SLcs_FMS_FGLR1e-4_CLLR1e-3_fixh5")
     parser.add_argument('--cuda', action='store_true', default=True)
     parser.add_argument('--batch_size', type=int, default=48) # default = 32 ; JS = 48
     parser.add_argument('--num_workers', type=int, default=0)
     parser.add_argument('--cache_path', type=str, default=None)
-    parser.add_argument('--num_classes',type=int,default=10)
+    parser.add_argument('--num_classes',type=int,default=13)
     parser.add_argument('--subset', default=5)
-    
+    parser.add_argument('--gpu', type= str, default="[0]")
     # evaluation
     parser.add_argument('--evaluate', action='store_true')  # predictions on eval set
     parser.add_argument('--ckpt_id',type= str, default=None)
@@ -417,7 +417,7 @@ if __name__ == '__main__':
     parser.add_argument('--pretrained', action='store_true', default=True) # Pre-trained on AS
     parser.add_argument('--model_name', type=str, default="dymn20_as") # Best MAP model
     parser.add_argument('--pretrain_final_temp', type=float, default=1.0)  # for DyMN
-    parser.add_argument('--model_width', type=float, default=1.0)
+    parser.add_argument('--model_width', type=float, default=2.0)
     parser.add_argument('--head_type', type=str, default="mlp")
     parser.add_argument('--se_dims', type=str, default="c")
     parser.add_argument('--n_epochs', type=int, default=80)
@@ -432,8 +432,8 @@ if __name__ == '__main__':
 
     # lr schedule
     parser.add_argument('--lr', type=float, default=1e-4) # JS setting, TAU'19 = 0.003
-    parser.add_argument('--lr_cl', type=float, default=1e-3) # Classification Layer Learning Rate
-    parser.add_argument('--lr_rl',type=float, default=1e-4) # Representation Layer Learning Rate
+    parser.add_argument('--lr_CL', type=float, default=1e-3) # Classification Layer Learning Rate
+    parser.add_argument('--lr_RL',type=float, default=1e-4) # Representation Layer Learning Rate
     parser.add_argument('--warm_up_len', type=int, default=10)
     parser.add_argument('--ramp_down_start', type=int, default=10)
     parser.add_argument('--ramp_down_len', type=int, default=65)
