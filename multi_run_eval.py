@@ -11,11 +11,17 @@ def run_multiple_scripts(scripts_with_args):
 if __name__ == "__main__":
     # Example: Replace these with your actual script names and arguments
     scripts_to_run = [
-        # ('get_logits.py', ['--evaluate', '--ckpt_id', 'qi2qx93m']),
-        # ('get_logits.py', ['--evaluate', '--ckpt_id', 'gc41eep8','--subset','5']),
-        # ('get_logits.py', ['--evaluate', '--ckpt_id', 'wn7gqg5y','--subset','5',"--base_channels", "96"]),
+        ('get_logits.py', ['--evaluate', '--ckpt_id', 'huyzahj3', '--sample_rate', '44100']),
+        ('get_logits.py', ['--evaluate', '--ckpt_id', 'ttpwu2wq', '--sample_rate', '44100']),
+        ('get_logits.py', ['--evaluate', '--ckpt_id', 'iqahdgms', '--sample_rate', '44100']),
         # ('get_logits.py', ['--evaluate', '--ckpt_id', 'phbu0vl2','--subset','5',"--base_channels", "96"]),
-        ('get_logits.py', ['--evaluate', '--ckpt_id', 'hx1xuegl','--subset','5',"--base_channels", "96"])
+        # ('get_logits.py', ['--evaluate', '--ckpt_id', 'hx1xuegl','--subset','5',"--base_channels", "96"])
+        # ('run_training_DynMN_h5_PL.py', ['--evaluate','--ckpt_id','8dzf1v5z','--gpu','[1]',"--subset", "5", "--batch_size", "48","--model_name", "dymn20_as","--model_width","2"]),
+        # ('run_training_DynMN_h5_PL.py', ['--evaluate','--ckpt_id','0lx0k8pp','--gpu','[0]',"--subset", "5", "--batch_size", "48","--model_name", "dymn20_as","--model_width","2"] ),
+        # ('run_training_DynMN_h5_PL.py', ['--evaluate','--ckpt_id','igl8n28c','--gpu','[1]',"--subset", "5", "--batch_size", "48","--model_name", "dymn20_as","--model_width","2"]),
+        # ('run_training_DynMN_h5_PL.py', ['--evaluate','--ckpt_id','kiykj1zl','--gpu','[0]',"--subset", "5", "--batch_size", "48","--model_name", "dymn20_as","--model_width","2"]),
+        # ('run_training_DynMN_h5_PL.py', ['--evaluate','--ckpt_id','yerjwwdq','--gpu','[1]',"--subset", "5", "--batch_size", "48","--model_name", "dymn20_as","--model_width","2"] ),
+        # ('run_training_DynMN_h5_PL.py', ['--evaluate','--ckpt_id','h3ez8bgq','--gpu','[0]',"--subset", "5", "--batch_size", "48","--model_name", "dymn20_as","--model_width","2"])
     ]
     run_multiple_scripts(scripts_to_run)
 
@@ -28,8 +34,38 @@ if __name__ == "__main__":
 ['qi2qx93m','gxw02np0', 'w1cm7obb','6gy1hz5n','0lumb7qw','4y5iqp12']
 
 
+#Dy20TA1
+'ncalnvch','njms2d1h','taoi4zzh','19vmadkn','p6lmh9x0','8uu9o45m'
 
+#Dy20TA2
+'lo8xn4i3','vt3dl9hx','6oz7k7j9','mvitmq7r','o70onxc7','14bjpp51'
 
+#Dy20TA3
+'8dzf1v5z','0lx0k8pp','igl8n28c','kiykj1zl','yerjwwdq','h3ez8bgq'
+
+#Dy10TA1
+'m1gyrwjn'
+'o369g0wu'
+'iy6mwlo5'
+'jbtddev3'
+'ec0bjwrz'
+'i5ubtkhn'
+
+#Dy10TA2
+'r46xbxe4'
+'rv0v6e4m'
+'f5um2bip'
+'7podxlyv'
+'29njyans'
+'hv5kjdv4'
+
+#Dy10TA3
+'sqxhajdv'
+'rtafwsli'
+'73xsgrfs'
+'xn1jvtvt'
+'p4ms9el7'
+'hxj6baec'
 
 
 

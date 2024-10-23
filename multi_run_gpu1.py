@@ -43,7 +43,7 @@ if __name__ == "__main__":
     # script_name = 'run_passt_cochl_tau_slowfast_subsets_DIR_FMS_h5.py'
     script_name = 'run_training_DynMN_h5_PL.py'
     # Base arguments (common to all runs, except experiment name and ckpt_id)
-    base_args = ['--gpu','[1]',"--subset", "25", "--dir_prob", "0.6", "--mixstyle_p", "0.4", "--batch_size", "48","--model_name", "dymn20_as"]
+    base_args = ['--gpu','[1]',"--subset", "5", "--dir_prob", "0.6", "--mixstyle_p", "0.4", "--batch_size", "48", "--model_width", "2.0"]
     
     # List of tuples containing checkpoint IDs and their corresponding experiment names
     ckpt_experiment_pairs = [

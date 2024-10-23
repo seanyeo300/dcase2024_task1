@@ -453,7 +453,7 @@ def train(config):
     trainer = pl.Trainer(max_epochs=config.n_epochs,
                          logger=wandb_logger,
                          accelerator='gpu',
-                         devices=1,
+                         devices=eval(config.gpu),
                          num_sanity_val_steps=0,
                          precision=config.precision,
                          callbacks=[pl.callbacks.ModelCheckpoint(save_last=True, monitor = "val/loss",save_top_k=1)]
@@ -597,6 +597,7 @@ if __name__ == '__main__':
     parser.add_argument('--dir_prob', type=float, default=0.6)  # prob. to apply device impulse response augmentation, default = 0.6
     parser.add_argument('--mixup',action='store_true', default =False)
     parser.add_argument('--mixup_alpha', type=float, default=1.0)
+    parser.add_argument('--gpu',type=str,default="[0]")
 
     # peak learning rate (in cosinge schedule)
     parser.add_argument('--lr', type=float, default=0.005)
