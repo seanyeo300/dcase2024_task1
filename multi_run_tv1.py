@@ -64,11 +64,12 @@ if __name__ == "__main__":
     # Define the script to run
     # script_name = 'run_training_KD_gpu_h5_tv1_ensemble_TA.py'
     # script_name = 'run_training_KD_gpu_h5_tv1.py'
-    # script_name = 'run_training_DynMN_h5_KD_tv1.py
-    script_name = 'run_training_KD_logit_stand_h5_tv1.py'
+    # script_name = 'run_training_DynMN_h5_KD_tv1.py'
+    script_name = 'run_training_KD_logit_stand_h5_tv1.py' 
+    # script_name = 'run_training_KD_teacher_logit_stand_h5_tv1.py'
     
     # Base arguments (common to all runs, except experiment name and ckpt_id)
-    base_args = ['--gpu','[1]',"--subset", "5", "--dir_prob", "0.6", "--mixstyle_p", "0.4","--logit_stand"]#, "--batch_size", "48","--pretrained","--model_name", "dymn10_as"] # this is for the KD process, does not apply to students!!! 
+    base_args = ['--gpu','[1]',"--subset", "5", "--dir_prob", "0.6", "--mixstyle_p", "0.4","--logit_stand","--kd_lambda","0.05","--temperature","3"]#, "--batch_size", "48","--pretrained","--model_name", "dymn10_as"] # this is for the KD process, does not apply to teachers!!! 
     
     # List of tuples containing checkpoint IDs and their corresponding experiment names
     ckpt_experiment_pairs = [
@@ -79,17 +80,20 @@ if __name__ == "__main__":
         # ("ke771aaz", "NTU_KD_Var1-T_FTtau-S_FMS_DIR_sub10_fixh5"),#FTtau FMS DIR
         # ("y7frm0sm", "NTU_KD_Var1-T_FTtau-S_FMS_sub5_fixh5"), #FTtau FMS
         # ("eqov5ca2", "NTU_KD_Var1-T_FTtau-S_FMS_DIR_Mixup_sub5_fixh5"), #FTtau FMS DIR MIXUP
-        # (None, "NTU_KD_tv1b-T_32BCBL-S_FMS_DIR_sub25_fixh5")          #tv1b
+        # (None, "NTU_KD_tv3b-T_32BCBL-S_FMS_DIR_stand_lmda=0.05_sub5_fixh5")          #tv1b
         # (None, "NTU_KD_Dy10TA1-T_32BCBL-S_FMS_DIR_sub5_fixh5")          #TA1
         # (None, "NTU_KD_tv1b-T_DyMN20-TA_FMS_DIR_sub5_fixh5")     # Dymn20 tv1b
         # (None, "NTU_KD_DyTA1-T_32BCBL-S_FMS_DIR_sub5_fixh5")        #TA1->BCBL distillation
         # (None, "NTU_KD_Dy20TA1-TA_Dy10TA1-TA_FMS_DIR_sub5_fixh5")    # tv1->Dymn20->Dymn10
-        # (None, "NTU_KD_EnDy20TA1-T_32BCBL-S_FMS_DIR_sub5_fixh5")          #DyMN20 TA1 Ensemble -> BCBL
-        (None, "NTU_KD_DCASE_ensem-T_32BCBL-S_FMS_DIR_stand_sub5_fixh5")          # DCASE ensemble logit stand
+        # (None, "NTU_KD_EnDy20TA1-T_32BCBL-S_FMS_DIR_sub5_fixh5")                               # DyMN20 TA1 Ensemble -> BCBL
+        # (None, "NTU_KD_3SIT3BCBL-T_32BCBL-S_FMS_DIR_stand_T=3_lmbda=0.05_sub5_fixh5")          # DCASE SIT BCBL logit stand
+        # (None, "NTU_KD_3SIT3BCBL-T_32BCBL-S_FMS_DIR_sub5_fixh5")                               # DCASE SIT BCBL logit stand
+        (None, "NTU_KD_3PaSST3BCBL-T_32BCBL-S_FMS_DIR_stand_T=3_lmbda=0.05_sub5_fixh5")          # DCASE ensemble logit stand
+        # (None, "NTU_KD_tv1b-T_32BCBL-S_FMS_DIR_stand_lmda=0.1_sub5_fixh5") #tv1 logit stand
     ]
     
     # Number of times to repeat each experiment
-    num_repeats = 2
+    num_repeats = 1
 
     # Run the script with different checkpoint IDs and experiment names
     run_multiple_scripts(script_name, base_args, ckpt_experiment_pairs, num_repeats)
