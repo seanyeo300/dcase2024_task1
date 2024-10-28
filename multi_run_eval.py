@@ -11,12 +11,12 @@ def run_multiple_scripts(scripts_with_args):
 if __name__ == "__main__":
     # Example: Replace these with your actual script names and arguments
     scripts_to_run = [
-        ('get_logits.py', ['--evaluate', '--ckpt_id', 'huyzahj3', '--sample_rate', '44100']),
-        ('get_logits.py', ['--evaluate', '--ckpt_id', 'ttpwu2wq', '--sample_rate', '44100']),
-        ('get_logits.py', ['--evaluate', '--ckpt_id', 'iqahdgms', '--sample_rate', '44100']),
+        # ('get_logits.py', ['--evaluate', '--ckpt_id', 'huyzahj3', '--sample_rate', '44100']),
+        # ('get_logits.py', ['--evaluate', '--ckpt_id', 'ttpwu2wq', '--sample_rate', '44100']),
+        # ('get_logits.py', ['--evaluate', '--ckpt_id', 'iqahdgms', '--sample_rate', '44100']),
         # ('get_logits.py', ['--evaluate', '--ckpt_id', 'phbu0vl2','--subset','5',"--base_channels", "96"]),
         # ('get_logits.py', ['--evaluate', '--ckpt_id', 'hx1xuegl','--subset','5',"--base_channels", "96"])
-        # ('run_training_DynMN_h5_PL.py', ['--evaluate','--ckpt_id','8dzf1v5z','--gpu','[1]',"--subset", "5", "--batch_size", "48","--model_name", "dymn20_as","--model_width","2"]),
+        ('run_training_DynMN_h5_PL.py', ['--evaluate','--ckpt_id','4kvh9p1r','--gpu','[1]',"--subset", "5", "--batch_size", "48","--model_name", "dymn20_as","--model_width","2"]),
         # ('run_training_DynMN_h5_PL.py', ['--evaluate','--ckpt_id','0lx0k8pp','--gpu','[0]',"--subset", "5", "--batch_size", "48","--model_name", "dymn20_as","--model_width","2"] ),
         # ('run_training_DynMN_h5_PL.py', ['--evaluate','--ckpt_id','igl8n28c','--gpu','[1]',"--subset", "5", "--batch_size", "48","--model_name", "dymn20_as","--model_width","2"]),
         # ('run_training_DynMN_h5_PL.py', ['--evaluate','--ckpt_id','kiykj1zl','--gpu','[0]',"--subset", "5", "--batch_size", "48","--model_name", "dymn20_as","--model_width","2"]),
