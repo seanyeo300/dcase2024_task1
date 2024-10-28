@@ -101,15 +101,15 @@ class PLModule(pl.LightningModule):
         if self.config.mixstyle_p > 0:   # Main KD pipeline with Freq-Mixstyle
             x = mixstyle(x, self.config.mixstyle_p, self.config.mixstyle_alpha)
             y_hat, _ = self.forward(x)
-            label_loss = F.cross_entropy(y_hat, y, reduction="none").mean() # differs from original impl which means after all losses are calculated
+            samples_loss=F.cross_entropy(y_hat, y, reduction="none")
+            label_loss = samples_loss.mean() # differs from original impl which means after all losses are calculated
             with torch.cuda.amp.autocast():
                 y_hat_soft = F.log_softmax(y_hat / self.config.temperature, dim=-1)
                 teacher_logits = F.log_softmax(teacher_logits / self.config.temperature, dim=-1)
             kd_loss = self.kl_div_loss(y_hat_soft, teacher_logits).mean()
             kd_loss = kd_loss * (self.config.temperature ** 2)
             loss = self.config.kd_lambda * label_loss + (1 - self.config.kd_lambda) * kd_loss
-            samples_loss=loss
-
+            
         elif self.config.mixup_alpha:
             rn_indices, lam = mixup(bs, self.config.mixup_alpha)
             lam = lam.to(x.device)
@@ -122,7 +122,8 @@ class PLModule(pl.LightningModule):
             loss = samples_loss.mean()
         else:
             y_hat, _ = self.forward(x)
-            samples_loss = F.cross_entropy(y_hat, y, reduction="none").mean()
+            samples_loss = F.cross_entropy(y_hat, y, reduction="none")
+            label_loss= samples_loss.mean()
             with torch.cuda.amp.autocast():
                 y_hat_soft = F.log_softmax(y_hat / self.config.temperature, dim=-1)
                 teacher_logits = F.log_softmax(teacher_logits / self.config.temperature, dim=-1)
@@ -477,7 +478,7 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="NTU_ASC24_DynMN")
-    parser.add_argument('--experiment_name', type=str, default="NTU_KD_tv1b-T_DyMN20_FTtau_32K_FMS_DIR_sub5_fixh5")
+    parser.add_argument('--experiment_name', type=str, default="NTU_KD_tv2c-T_DyMN20_FTtau_32K_FMS_DIR_sub5_fixh5")
     parser.add_argument('--cuda', action='store_true', default=True)
     parser.add_argument('--batch_size', type=int, default=48) # default = 32 ; JS = 48
     parser.add_argument('--num_workers', type=int, default=0)

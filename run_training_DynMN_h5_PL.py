@@ -14,7 +14,7 @@ import torchaudio
 import json
 
 from dataset.dcase24_ntu_DynMN import ntu_get_training_set_dir, ntu_get_test_set, ntu_get_eval_set, open_h5, close_h5, dataset_config
-# from models.mn.model import get_model as get_mobilenet
+from models.mn.model import get_model as get_mobilenet
 from models.dymn.model import get_model as get_dymn
 from models.preprocess import AugmentMelSTFT
 from helpers.init import worker_init_fn
@@ -59,9 +59,14 @@ class PLModule(pl.LightningModule):
         self.pretrained_name = self.model_name if config.pretrained else None
         self.width = NAME_TO_WIDTH(self.model_name) if self.model_name and config.pretrained else config.model_width
         print(f"DyMn with model width: {self.width}")
-        self.model = get_dymn(width_mult=self.width, pretrained_name=self.pretrained_name,
+        if self.model_name.startswith("dymn"):
+            self.model = get_dymn(width_mult=self.width, pretrained_name=self.pretrained_name,
                          pretrain_final_temp=config.pretrain_final_temp,
                          num_classes=config.num_classes)
+        else:
+            self.model = get_mobilenet(width_mult=self.width, pretrained_name=self.pretrained_name,
+                                head_type=config.head_type, se_dims=config.se_dims,
+                                num_classes=config.num_classes)
         
         self.device_ids = ['a', 'b', 'c', 's1', 's2', 's3', 's4', 's5', 's6']
         self.label_ids = ['airport', 'bus', 'metro', 'metro_station', 'park', 'public_square', 'shopping_mall',
@@ -395,14 +400,14 @@ def evaluate(config):
     ############# h5 edit here ##############
     # Open h5 file once
     hf_in = open_h5('h5py_audio_wav')
-    eval_hf = open_h5('h5py_audio_wav2') # only when obtaining pre-computed train
+    # eval_hf = open_h5('h5py_audio_wav2') # only when obtaining pre-computed train
     # eval_hf = open_h5('h5py_audio_eval_wav')
     # load lightning module from checkpoint
     pl_module = PLModule.load_from_checkpoint(ckpt_file, config=config)
     trainer = pl.Trainer(logger=False,
                          accelerator='gpu',
-                         devices=1,
-                         precision=config.precision)
+                         devices=eval(config.gpu),
+                         )
     ############# h5 edit here ##############
     # evaluate lightning module on development-test split
     test_dl = DataLoader(dataset=ntu_get_test_set(hf_in),
@@ -464,13 +469,13 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="NTU_ASC24_DynMN")
-    parser.add_argument('--experiment_name', type=str, default="tDynMN20_FTtau_32K_FMS_DIR_sub10_fixh5")
+    parser.add_argument('--experiment_name', type=str, default="tDynMN20_FTtau_32K_FMS_DIR_sub5_fixh5")
     parser.add_argument('--cuda', action='store_true', default=True)
     parser.add_argument('--batch_size', type=int, default=48) # default = 32 ; JS = 48
     parser.add_argument('--num_workers', type=int, default=0)
     parser.add_argument('--cache_path', type=str, default=None)
     parser.add_argument('--num_classes',type=int,default=10)
-    parser.add_argument('--subset', type=int, default=10)
+    parser.add_argument('--subset', type=int, default=5)
     
     # evaluation
     parser.add_argument('--evaluate', action='store_true')  # predictions on eval set
@@ -478,9 +483,9 @@ if __name__ == '__main__':
     
     # training
     parser.add_argument('--pretrained', action='store_true', default=False) # Pre-trained on AS
-    parser.add_argument('--model_name', type=str, default="dymn10_as") # Best MAP model
+    parser.add_argument('--model_name', type=str, default="dymn20_as") # Best MAP model
     parser.add_argument('--pretrain_final_temp', type=float, default=1.0)  # for DyMN
-    parser.add_argument('--model_width', type=float, default=1.0)
+    parser.add_argument('--model_width', type=float, default=2.0)
     parser.add_argument('--head_type', type=str, default="mlp")
     parser.add_argument('--se_dims', type=str, default="c")
     parser.add_argument('--n_epochs', type=int, default=80) # default=80
@@ -492,7 +497,7 @@ if __name__ == '__main__':
     parser.add_argument('--gain_augment', type=int, default=12)
     parser.add_argument('--weight_decay', type=int, default=0.0) #ADAM, no WD
     parser.add_argument('--dir_prob', type=float, default=0.6)  # prob. to apply device impulse response augmentation, default for TAU = 0.6 
-    parser.add_argument('--gpu', type=str, default='[0]')
+    parser.add_argument('--gpu', type=str, default='[1]')
     
     # lr schedule
     parser.add_argument('--lr', type=float, default=1e-4) # JS setting, TAU'19 = 0.003

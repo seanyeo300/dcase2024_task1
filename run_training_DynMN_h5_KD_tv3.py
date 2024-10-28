@@ -93,7 +93,7 @@ class PLModule(pl.LightningModule):
     
     def training_step(self, batch, batch_idx):
     
-        x, files, y, dev, city, index , logits = batch
+        x, files, y, dev, city, index , teacher_logits = batch
         bs = x.size(0)
         y=y.long()
         x = self.mel_forward(x)
@@ -101,15 +101,15 @@ class PLModule(pl.LightningModule):
         if self.config.mixstyle_p > 0:   # Main KD pipeline with Freq-Mixstyle
             x = mixstyle(x, self.config.mixstyle_p, self.config.mixstyle_alpha)
             y_hat, _ = self.forward(x)
-            label_loss = F.cross_entropy(y_hat, y, reduction="none").mean() # differs from original impl which means after all losses are calculated
+            samples_loss=F.cross_entropy(y_hat, y, reduction="none")
+            label_loss = samples_loss.mean() # differs from original impl which means after all losses are calculated
             with torch.cuda.amp.autocast():
                 y_hat_soft = F.log_softmax(y_hat / self.config.temperature, dim=-1)
                 teacher_logits = F.log_softmax(teacher_logits / self.config.temperature, dim=-1)
             kd_loss = self.kl_div_loss(y_hat_soft, teacher_logits).mean()
             kd_loss = kd_loss * (self.config.temperature ** 2)
             loss = self.config.kd_lambda * label_loss + (1 - self.config.kd_lambda) * kd_loss
-
-
+            
         elif self.config.mixup_alpha:
             rn_indices, lam = mixup(bs, self.config.mixup_alpha)
             lam = lam.to(x.device)
@@ -122,7 +122,8 @@ class PLModule(pl.LightningModule):
             loss = samples_loss.mean()
         else:
             y_hat, _ = self.forward(x)
-            samples_loss = F.cross_entropy(y_hat, y, reduction="none").mean()
+            samples_loss = F.cross_entropy(y_hat, y, reduction="none")
+            label_loss= samples_loss.mean()
             with torch.cuda.amp.autocast():
                 y_hat_soft = F.log_softmax(y_hat / self.config.temperature, dim=-1)
                 teacher_logits = F.log_softmax(teacher_logits / self.config.temperature, dim=-1)
@@ -349,6 +350,7 @@ def train(config):
     # name = None
     # accuracy, val_loss = float('NaN'), float('NaN')
     
+    print(f"DyMN model with width: {config.model_width}")
     
     # get model complexity from nessi and log results to wandb
     sample = next(iter(train_dl))[0][0].unsqueeze(0)
@@ -366,7 +368,7 @@ def train(config):
     trainer = pl.Trainer(max_epochs=config.n_epochs,
                          logger=wandb_logger,
                          accelerator='gpu',
-                         devices=config.gpu,
+                         devices=eval(config.gpu),
                          callbacks=[lr_monitor, checkpoint_callback])
     # start training and validation for the specified number of epochs
     trainer.fit(pl_module, train_dl, test_dl)
@@ -477,7 +479,7 @@ if __name__ == '__main__':
 
     # general
     parser.add_argument('--project_name', type=str, default="NTU_ASC24_DynMN")
-    parser.add_argument('--experiment_name', type=str, default="NTU_KD_tv1b-T_DyMN20_FTtau_32K_FMS_DIR_sub5_fixh5")
+    parser.add_argument('--experiment_name', type=str, default="NTU_KD_tv3b-T_DyMN20_FTtau_32K_FMS_DIR_sub5_fixh5")
     parser.add_argument('--cuda', action='store_true', default=True)
     parser.add_argument('--batch_size', type=int, default=48) # default = 32 ; JS = 48
     parser.add_argument('--num_workers', type=int, default=0)
@@ -490,13 +492,13 @@ if __name__ == '__main__':
     parser.add_argument('--ckpt_id', type=str, required=False, default=None)
     
     # training
-    parser.add_argument('--pretrained', action='store_true', default=True) # Pre-trained on AS
+    parser.add_argument('--pretrained', action='store_true', default=False) # Pre-trained on AS
     parser.add_argument('--model_name', type=str, default="dymn20_as") # Best MAP model
     parser.add_argument('--pretrain_final_temp', type=float, default=1.0)  # for DyMN
     parser.add_argument('--model_width', type=float, default=1.0)
     parser.add_argument('--head_type', type=str, default="mlp")
     parser.add_argument('--se_dims', type=str, default="c")
-    parser.add_argument('--n_epochs', type=int, default=80) # default=80
+    parser.add_argument('--n_epochs', type=int, default=120) # default=80
     parser.add_argument('--mixup_alpha', type=float, default=0.3)
     parser.add_argument('--mixstyle_p', type=float, default=0.4)
     parser.add_argument('--mixstyle_alpha', type=float, default=0.4)
@@ -505,7 +507,7 @@ if __name__ == '__main__':
     parser.add_argument('--gain_augment', type=int, default=12)
     parser.add_argument('--weight_decay', type=int, default=0.0) #ADAM, no WD
     parser.add_argument('--dir_prob', type=float, default=0)  # prob. to apply device impulse response augmentation, default for TAU = 0.6 ; JS does not use it
-    parser.add_argument('--gpu', type=list, default=[0])
+    parser.add_argument('--gpu', type=str, default="[0]")
 
     #Knowledge Distillation
     parser.add_argument('--temperature', type=float, default=2.0)
