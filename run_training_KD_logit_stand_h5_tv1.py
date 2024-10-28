@@ -593,7 +593,6 @@ if __name__ == '__main__':
     parser.add_argument('--temperature', type=float, default=2.0)
     parser.add_argument('--kd_lambda', type=float, default=0.02) # default is 0.02
     parser.add_argument('--logit_stand', action='store_true', default=False)
-    parser.add_argument('--teacher_stand',action='store_true',default=False)
     #learning rate for KD
     # parser.add_argument('--lr', type=float, default=0.0009)
     # parser.add_argument('--warm_up_len', type=int, default=14)
