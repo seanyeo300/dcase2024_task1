@@ -35,7 +35,7 @@ dataset_config = {
     # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_tv3.pt") # Continual Learning teacher sub5_ensemble_12_model_tv5.pt
     # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_12_model_tv5.pt")
     # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_PASST_tv1b.pt") # tv1b
-    "logits_file": os.path.join("predictions","ensemble", "sub5_DyMN20_TA1.pt") # TA1->BCBL
+    "logits_file": os.path.join("predictions","ensemble", "sub5_DyMN20_TA1.pt") # TA1->Dy10/BCBL
     # "eval_dir": os.path.join(dataset_dir, "TAU-urban-acoustic-scenes-2024-mobile-evaluation"), 
     # "eval_meta_csv": os.path.join(dataset_dir,  "TAU-urban-acoustic-scenes-2024-mobile-evaluation", "meta.csv")
     
