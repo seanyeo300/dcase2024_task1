@@ -36,13 +36,14 @@ dataset_config = {
     # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_PaSST_tv3b.pt") # tv3
     # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_PASST_TA2.pt")  #TA2
     # "logits_file": os.path.join("predictions","ensemble", "sub5_DyMN20_TA1.pt") # TA1->BCBL
+    "logits_file": os.path.join("predictions","ensemble", "sub5_DyMN10_TA1.pt") # TA1->BCBL
     #sub10
     # "logits_file": os.path.join("predictions","ensemble", "sub10_ensemble_6_PASST_tv1b.pt") # 
     # "logits_file": os.path.join("predictions","ensemble", "sub10_ensemble_6_PaSST_tv2c.pt") # tv2 
     # "logits_file": os.path.join("predictions","ensemble", "sub10_ensemble_6_PaSST_tv3b.pt") # tv3
     
     #sub25
-    "logits_file": os.path.join("predictions","ensemble", "sub25_ensemble_6_PaSST_tv1b.pt")  # tv1
+    # "logits_file": os.path.join("predictions","ensemble", "sub25_ensemble_6_PaSST_tv1b.pt")  # tv1
     # "logits_file": os.path.join("predictions","ensemble", "sub25_ensemble_6_PaSST_tv2c.pt") # tv2 
     # "logits_file": os.path.join("predictions","ensemble", "sub25_ensemble_6_PaSST_tv3b.pt") # tv3
     
