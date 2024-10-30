@@ -65,9 +65,10 @@ if __name__ == "__main__":
     script_name = 'run_training_KD_gpu_h5_tv2_ensemble_TA.py'
     # script_name = 'run_training_KD_gpu_h5_tv2.py'
     # script_name = 'run_training_DynMN_h5_KD_tv2.py'
+    script_name = 'run_training_DynMN_h5_KD_logit_stand_tv2.py'
     
     # Base arguments (common to all runs, except experiment name and ckpt_id)
-    base_args = ['--gpu','[0]',"--subset", "5", "--dir_prob", "0.6", "--mixstyle_p", "0.4"]#, "--batch_size", "48","--pretrained","--model_name", "dymn10_as"] # this is for the KD process, does not apply to students!!! 
+    base_args = ['--gpu','[0]',"--subset", "5", "--dir_prob", "0.6", "--mixstyle_p", "0.4","--logit_stand","--kd_lambda","0.05","--temperature","3", "--batch_size", "48","--pretrained","--model_name", "dymn10_as"] # this is for the KD process, does not apply to teachers!!! 
     # List of tuples containing checkpoint IDs and their corresponding experiment names
     ckpt_experiment_pairs = [
         # ("fskag87u", "NTU_KD_Var2b-T_DSIT-S_FMS_DIR_sub5_fixh5"), #DSIT
@@ -81,7 +82,8 @@ if __name__ == "__main__":
         # (None, "NTU_KD_tv2c-T_DyMN20-TA_FMS_DIR_sub5_fixh5")      # Dymn20 tv2c
         # (None, "NTU_KD_Dy10TA2-T_32BCBL-S_FMS_DIR_sub5_fixh5")          #TA2->BCBL
         # (None, "NTU_KD_Dy20TA2-TA_Dy10TA2-TA_FMS_DIR_sub5_fixh5")        #tv2->DyMN20->DyMN10
-        (None, "NTU_KD_EnDy20TA2-T_32BCBL-S_FMS_DIR_sub5_fixh5")          #DyMN20 TA1 Ensemble -> BCBL
+        # (None, "NTU_KD_Dy20TA2-TA_Dy10TA2-TA_FMS_DIR_stand_T=3_lmbda=0.05_sub5_fixh5")        # tv2->Dymn20->Dymn10 logit stand, T=3, lmbda=0.05
+        (None, "NTU_KD_EnDy20TA2-T_32BCBL-S_FMS_DIR_sub5_fixh5")                                #DyMN20 TA1 Ensemble -> BCBL
     ]
     
     # Number of times to repeat each experiment
