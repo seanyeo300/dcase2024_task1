@@ -42,10 +42,11 @@ if __name__ == "__main__":
     # Define the script to run
     # script_name = 'run_training_KD_gpu_h5_tv3_ensemble_TA.py'
     # script_name = 'run_training_KD_gpu_h5_tv3.py'
-    script_name = 'run_training_DynMN_h5_KD_tv3.py'
+    # script_name = 'run_training_DynMN_h5_KD_tv3.py'
+    script_name = 'run_training_DynMN_h5_KD_logit_stand_tv3.py'
     
     # Base arguments (common to all runs, except experiment name and ckpt_id)
-    base_args = ['--gpu','[1]',"--subset", "5", "--dir_prob", "0.6", "--mixstyle_p", "0.4", "--batch_size", "48", '--model_width','2.0'] # this is for the KD process, does not apply to students!!! 
+    base_args = ['--gpu','[1]',"--subset", "5", "--dir_prob", "0.6", "--mixstyle_p", "0.4","--logit_stand","--kd_lambda","0.05","--temperature","4", "--batch_size", "48","--pretrained","--model_name", "dymn10_as"] # this is for the KD process, does not apply to teachers!!! 
     # List of tuples containing checkpoint IDs and their corresponding experiment names
     ckpt_experiment_pairs = [
         # ("fskag87u", "NTU_KD_Var3b-T_DSIT-S_FMS_DIR_sub5_fixh5"),     #DSIT
@@ -61,12 +62,13 @@ if __name__ == "__main__":
         # (None, "NTU_KD_tv3b-T_DyMN20-TA_NOAS_120_epoch_FMS_DIR_sub5_fixh5")     # tv3b->Dymn20 No AS pretrain
         # (None, "NTU_KD_DyMN20-TA_NOAS-T_DyMN15-TA_NOAS_FMS_DIR_sub5_fixh5")     # Dymn20 No AS pretrain->Dy15/10TA
         # (None, "NTU_KD_Dy10TA3-T_32BCBL-S_FMS_DIR_sub5_fixh5")       #TA3->BCBL
-        (None, "NTU_KD_Dy20TA3-TA_Dy10TA3-TA_FMS_DIR_sub5_T=3_lmda=0.05_fixh5")            #tv3->Dymn20->Dymn10
+        # (None, "NTU_KD_Dy20TA3-TA_Dy10TA3-TA_FMS_DIR_sub5_T=3_lmda=0.05_fixh5")            #tv3->Dymn20->Dymn10
+        (None, "NTU_KD_Dy20TA3-TA_Dy10TA3-TA_FMS_DIR_stand_T=4_lmbda=0.05_sub5_fixh5")        # tv3->Dymn20->Dymn10 logit stand, T=3, lmbda=0.05
         # (None, "NTU_KD_EnDy20TA3-T_32BCBL-S_FMS_DIR_temp=3_sub5_fixh5")          #DyMN20 TA3 Ensemble -> BCBL
     ]
     
     # Number of times to repeat each experiment
-    num_repeats = 1
+    num_repeats = 2
 
     # Run the script with different checkpoint IDs and experiment names
     run_multiple_scripts(script_name, base_args, ckpt_experiment_pairs, num_repeats)
