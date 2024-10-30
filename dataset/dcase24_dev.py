@@ -131,6 +131,7 @@ class SimpleSelectionDataset(TorchDataset):
 
     def __len__(self):
         return len(self.available_indices)
+    
 
 
 class RollDataset(TorchDataset):
@@ -239,7 +240,7 @@ class BasicDCASE24EvalDataset(TorchDataset):
 
     def __len__(self):
         return len(self.files)
-
+    
 
 def get_eval_set():
     assert os.path.exists(dataset_config['eval_dir']), f"No such folder: {dataset_config['eval_dir']}"
