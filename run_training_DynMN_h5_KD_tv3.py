@@ -498,7 +498,7 @@ if __name__ == '__main__':
     parser.add_argument('--model_width', type=float, default=1.0)
     parser.add_argument('--head_type', type=str, default="mlp")
     parser.add_argument('--se_dims', type=str, default="c")
-    parser.add_argument('--n_epochs', type=int, default=120) # default=80
+    parser.add_argument('--n_epochs', type=int, default=80) # default=80
     parser.add_argument('--mixup_alpha', type=float, default=0.3)
     parser.add_argument('--mixstyle_p', type=float, default=0.4)
     parser.add_argument('--mixstyle_alpha', type=float, default=0.4)
