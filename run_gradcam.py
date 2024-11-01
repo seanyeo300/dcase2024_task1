@@ -19,7 +19,7 @@ from helpers.init import worker_init_fn
 from models.baseline import get_model
 from helpers.utils import mixstyle
 from helpers import nessi
-from pytorch_grad_cam import GradCAM
+from pytorch_grad_cam import GradCAM, HiResCAM, GradCAMPlusPlus, DeepFeatureFactorization
 from pytorch_grad_cam.utils.image import show_cam_on_image
 from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
 
@@ -232,9 +232,10 @@ class PLModule(pl.LightningModule):
         x, files, labels, devices, cities = test_batch
         labels = labels.type(torch.LongTensor).to(device=x.device)
         
-        # Generate a unique run ID for the subfolder
+        # Determine the CAM method and append it to the folder name
+        cam_method_name = self.config.CamMethod  # Ensure this attribute is set with the method name (e.g., "HiResCAM")
         run_id = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_dir = os.path.join("cams", run_id)
+        output_dir = os.path.join("cams", f"{run_id}_{cam_method_name}")
         os.makedirs(output_dir, exist_ok=True)  # Ensure the directory exists
         
         # Prepare the base filename
@@ -247,14 +248,23 @@ class PLModule(pl.LightningModule):
                     x = self.mel_forward(x).float().to(self.device)
                     x.requires_grad_()  # Enable gradients for GradCAM
                     print(x.shape)
-                    # Define target layer for GradCAM
+                    # Define target layer and initialize selected CAM method
                     target_layer = self.model.feed_forward[0]
-                    cam = GradCAM(model=self.model, target_layers=[target_layer], use_cuda=True)
+                    if cam_method_name == "HiResCAM":
+                        cam = HiResCAM(model=self.model, target_layers=[target_layer], use_cuda=True)
+                    elif cam_method_name == "GradCAM":
+                        cam = GradCAM(model=self.model, target_layers=[target_layer], use_cuda=True)
+                    elif cam_method_name == "GradCAMPlusPlus":
+                        cam = GradCAMPlusPlus(model=self.model, target_layers=[target_layer], use_cuda=True)
+                    elif cam_method_name == 'DeepFeatureFactorization':
+                        cam = DeepFeatureFactorization(model=self.model, target_layers=[target_layer], use_cuda=True)
+                    else:
+                        raise ValueError(f"Unsupported CAM method: {cam_method_name}")
 
                     # Forward pass to obtain predictions
                     y_hat = self.model(x)
                     targets = [ClassifierOutputTarget(labels.item())]
-                    grayscale_cam = cam(input_tensor=x, targets=targets)[0]
+                    grayscale_cam = cam(input_tensor=x, targets=targets,aug_smooth=self.aug_smooth)[0]
 
                     # Normalize x to [0, 1] for compatibility with show_cam_on_image
                     input_image = x[0].cpu().detach().numpy().transpose(1, 2, 0)
@@ -548,9 +558,12 @@ if __name__ == '__main__':
     # evaluation
     parser.add_argument('--evaluate', action='store_true',default=True)  # predictions on eval set
     parser.add_argument('--ckpt_id', type=str, default='huyzahj3')  # for loading trained model, corresponds to wandb id
-    # Add this in the argument parser section
+    
+    # GRADCAM
     parser.add_argument('--Cam', action='store_true', default=True, help='Use GradCAM for visualizing class activations')
     parser.add_argument('--Cam_index', type=int, default=0, help='Index of the audio sample to visualize with GradCAM')
+    parser.add_argument('--CamMethod', type=str,default='GradCAM', help='Choose from GradCAM, HiResCAM, GradCAMPlusPlus, DeepFeatureFactorization') 
+    parser.add_argument('--aug_smooth',action='store_true', default= False, help= 'toggle smoothing')
     # dataset
     # subset in {100, 50, 25, 10, 5}
     parser.add_argument('--orig_sample_rate', type=int, default=44100)
