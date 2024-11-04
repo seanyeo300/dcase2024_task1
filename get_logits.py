@@ -405,7 +405,7 @@ def evaluate(config):
     pl_module = PLModule.load_from_checkpoint(ckpt_file, config=config)
     trainer = pl.Trainer(logger=False,
                          accelerator='gpu',
-                         devices=[1],
+                         devices=[0],
                          precision=config.precision)
 
     # evaluate lightning module on development-test split
