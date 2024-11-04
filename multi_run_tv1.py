@@ -70,7 +70,7 @@ if __name__ == "__main__":
     # script_name = 'run_training_DynMN_h5_KD_logit_stand_tv1.py'
     
     # Base arguments (common to all runs, except experiment name and ckpt_id)
-    base_args = ['--gpu','[1]',"--subset", "5", "--dir_prob", "0.6", "--mixstyle_p", "0.4","--kd_lambda","0.06","--temperature","3","--logit_stand"]# "--batch_size", "48","--pretrained","--model_name", "dymn10_as"] # this is for the KD process, does not apply to teachers!!! "--logit_stand"
+    base_args = ['--gpu','[0]',"--subset", "5", "--dir_prob", "0.6", "--mixstyle_p", "0.4","--kd_lambda","0.06","--temperature","2","--logit_stand"]# "--batch_size", "48","--pretrained","--model_name", "dymn10_as"] # this is for the KD process, does not apply to teachers!!! "--logit_stand"
     
     # List of tuples containing checkpoint IDs and their corresponding experiment names
     ckpt_experiment_pairs = [
@@ -88,7 +88,7 @@ if __name__ == "__main__":
         # (None, "NTU_KD_Dy20TA1-TA_Dy10TA1-TA_FMS_DIR_sub5_fixh5")                              # tv1->Dymn20->Dymn10 T=2, lmbda=0.02
         # (None, "NTU_KD_Dy20TA1-TA_Dy10TA1-TA_FMS_DIR_T=4_lmbda=0.05_sub5_fixh5")           # tv1->Dymn20->Dymn10 logit stand, T=3, lmbda=0.05
         # (None, "NTU_KD_EnDy20TA1-T_32BCBL-S_FMS_DIR_sub5_fixh5")                               # DyMN20 TA1 Ensemble -> BCBL
-        (None, "NTU_KD_3SIT3BCBL-T_32BCBL-S_FMS_DIR_stand_T=3_lmbda=0.06_sub5_fixh5")          # DCASE SIT BCBL logit stand, T=3, lmbda=0.05
+        (None, "NTU_KD_3SIT3BCBL-T_32BCBL-S_FMS_DIR_stand_T=2_lmbda=0.06_sub5_fixh5")          # DCASE SIT BCBL logit stand, T=3, lmbda=0.05
         # (None, "NTU_KD_3SIT3BCBL-T_32BCBL-S_FMS_DIR_T=2_lmbda=0.02_sub5_fixh5")                # DCACSE SIT BCBL NAIVE TEMP
         # (None, "NTU_KD_3SIT3BCBL-T_32BCBL-S_FMS_DIR_T=3_lmbda=0.05_sub5_fixh5")                # DCASE SIT BCBL T=3, lmbda = 0.05
         # (None, "NTU_KD_3PaSST3BCBL-T_32BCBL-S_FMS_DIR_stand_T=3_lmbda=0.05_sub5_fixh5")        # DCASE PaSST BCBL logit stand, T=3, lmbda=0.05
