@@ -74,7 +74,7 @@ class PLModule(pl.LightningModule):
         self.device_groups = {'a': "real", 'b': "real", 'c': "real",
                               's1': "seen", 's2': "seen", 's3': "seen",
                               's4': "unseen", 's5': "unseen", 's6': "unseen"}
-
+        self.aug_smooth=config.aug_smooth
         # pl 2 containers:
         self.training_step_outputs = []
         self.validation_step_outputs = []
@@ -232,13 +232,19 @@ class PLModule(pl.LightningModule):
         x, files, labels, devices, cities = test_batch
         labels = labels.type(torch.LongTensor).to(device=x.device)
         
+        #obtain ckpt_id from config
+        ckpt_id = self.config.ckpt_id
         # Determine the CAM method and append it to the folder name
         cam_method_name = self.config.CamMethod  # Ensure this attribute is set with the method name (e.g., "HiResCAM")
-        run_id = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_dir = os.path.join("cams", f"{run_id}_{cam_method_name}")
-        os.makedirs(output_dir, exist_ok=True)  # Ensure the directory exists
+        class_label = self.label_ids[labels.item()]
         
-        # Prepare the base filename
+        # run_id = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        
+        base_dir = os.path.join("cams", f"{ckpt_id}_{cam_method_name}")
+        class_dir = os.path.join(base_dir, class_label)
+        os.makedirs(class_dir, exist_ok=True)  # Ensure the directory exists
+        
+        # Prepare the base filename for saving images
         base_filename = os.path.splitext(os.path.basename(files[0]))[0]
         
         with torch.set_grad_enabled(True):
@@ -272,28 +278,23 @@ class PLModule(pl.LightningModule):
                     input_image = input_image.astype(np.float32)
 
                     # Save the original input image (spectrogram)
-                    input_image_path = os.path.join(output_dir, f'{base_filename}_input.png')
+                    input_image_path = os.path.join(class_dir, f'{base_filename}_input.png')
                     cv2.imwrite(input_image_path, (input_image * 255).astype(np.uint8))  # Scale to [0, 255] for saving
                     print(f"Input image saved at: {input_image_path}")
 
                     # Save the CAM mask (grayscale CAM)
-                    mask_path = os.path.join(output_dir, f'{base_filename}_mask.png')
+                    mask_path = os.path.join(class_dir, f'{base_filename}_mask.png')
                     mask_image = (grayscale_cam - grayscale_cam.min()) / (grayscale_cam.max() - grayscale_cam.min())
                     cv2.imwrite(mask_path, (mask_image * 255).astype(np.uint8))  # Scale to [0, 255]
                     print(f"Mask image saved at: {mask_path}")
 
                     # Overlay CAM on the input image
                     cam_img = show_cam_on_image(input_image, grayscale_cam, use_rgb=True)
-                    cam_output_path = os.path.join(output_dir, f'{base_filename}_cam.png')
+                    cam_output_path = os.path.join(class_dir, f'{base_filename}_cam.png')
                     cv2.imwrite(cam_output_path, cam_img)
                     print(f"Overlayed CAM image saved at: {cam_output_path}")
 
-                return {
-                    "file": files[0],
-                    "input_image": input_image_path,
-                    "mask": mask_path,
-                    "cam_output": cam_output_path
-                }
+                
             else:
                 self.model.half()
             
@@ -557,11 +558,11 @@ if __name__ == '__main__':
 
     # evaluation
     parser.add_argument('--evaluate', action='store_true',default=True)  # predictions on eval set
-    parser.add_argument('--ckpt_id', type=str, default='huyzahj3')  # for loading trained model, corresponds to wandb id
     
+    parser.add_argument('--ckpt_id', type=str, default='ttpwu2wq')  # for loading trained model, corresponds to wandb id
     # GRADCAM
     parser.add_argument('--Cam', action='store_true', default=True, help='Use GradCAM for visualizing class activations')
-    parser.add_argument('--Cam_index', type=int, default=0, help='Index of the audio sample to visualize with GradCAM')
+    parser.add_argument('--Cam_index', type=int, default=14843, help='Index of the audio sample to visualize with GradCAM')
     parser.add_argument('--CamMethod', type=str,default='GradCAM', help='Choose from GradCAM, HiResCAM, GradCAMPlusPlus, DeepFeatureFactorization') 
     parser.add_argument('--aug_smooth',action='store_true', default= False, help= 'toggle smoothing')
     # dataset
