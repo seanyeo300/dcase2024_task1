@@ -121,30 +121,6 @@ class PLModule(pl.LightningModule):
         }
         return [optimizer], [lr_scheduler_config]
 
-    def training_step(self, train_batch, batch_idx):
-        """
-        :param train_batch: contains one batch from train dataloader
-        :param batch_idx
-        :return: loss to update model parameters
-        """
-        x, files, labels, devices, cities = train_batch
-        x = self.mel_forward(x)  # we convert the raw audio signals into log mel spectrograms
-        labels = labels.type(torch.LongTensor)
-        labels = labels.to(device=x.device)
-        if self.config.mixstyle_p > 0:
-            # frequency mixstyle
-            x = mixstyle(x, self.config.mixstyle_p, self.config.mixstyle_alpha)
-        y_hat = self.model(x.cuda())
-        samples_loss = F.cross_entropy(y_hat, labels, reduction="none")
-        loss = samples_loss.mean()
-
-        self.log("lr", self.trainer.optimizers[0].param_groups[0]['lr'])
-        self.log("epoch", self.current_epoch)
-        self.log("train/loss", loss.detach().cpu())
-        return loss
-
-    def on_train_epoch_end(self):
-        pass
 
     def validation_step(self, val_batch, batch_idx):
         x, files, labels, devices, cities = val_batch
@@ -384,62 +360,6 @@ class PLModule(pl.LightningModule):
         x, files = eval_batch
         y_hat = self.model(x)
         return files, y_hat
-
-
-def train(config):
-    # logging is done using wandb
-    wandb_logger = WandbLogger(
-        project=config.project_name,
-        notes="Baseline System for DCASE'24 Task 1.",
-        tags=["DCASE24"],
-        config=config,  # this logs all hyperparameters for us
-        name=config.experiment_name
-    )
-
-    # train dataloader
-    assert config.subset in {100, 50, 25, 10, 5}, "Specify an integer value in: {100, 50, 25, 10, 5} to use one of " \
-                                                  "the given subsets."
-    roll_samples = config.orig_sample_rate * config.roll_sec
-    train_dl = DataLoader(dataset=get_training_set(config.subset, roll=roll_samples),
-                          worker_init_fn=worker_init_fn,
-                          num_workers=config.num_workers,
-                          batch_size=config.batch_size,
-                          shuffle=True)
-
-    test_dl = DataLoader(dataset=get_test_set(),
-                         worker_init_fn=worker_init_fn,
-                         num_workers=config.num_workers,
-                         batch_size=config.batch_size)
-
-    # create pytorch lightening module
-    pl_module = PLModule(config)
-
-    # get model complexity from nessi and log results to wandb
-    sample = next(iter(test_dl))[0][0].unsqueeze(0)
-    shape = pl_module.mel_forward(sample).size()
-    macs, params = nessi.get_torch_size(pl_module.model, input_size=shape)
-    # log MACs and number of parameters for our model
-    wandb_logger.experiment.config['MACs'] = macs
-    wandb_logger.experiment.config['Parameters'] = params
-
-    # create the pytorch lightening trainer by specifying the number of epochs to train, the logger,
-    # on which kind of device(s) to train and possible callbacks
-    trainer = pl.Trainer(max_epochs=config.n_epochs,
-                         logger=wandb_logger,
-                         accelerator='gpu',
-                         devices=1,
-                         num_sanity_val_steps=0,
-                         precision=config.precision,
-                         callbacks=[pl.callbacks.ModelCheckpoint(save_last=True, monitor = "val/loss",save_top_k=1)])
-    # start training and validation for the specified number of epochs
-    trainer.fit(pl_module, train_dl, test_dl)
-
-    # final test step
-    # here: use the validation split
-    trainer.test(ckpt_path='best', dataloaders=test_dl)
-
-    wandb.finish()
-
 
 def evaluate(config):
     import os
