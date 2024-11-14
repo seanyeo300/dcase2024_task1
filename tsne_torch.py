@@ -21,12 +21,13 @@ import os
 torch.manual_seed(42)  # You can choose any integer as the seed
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--base_dir', type=str,default="D:\Sean\github\dcase2024_task1\embed")
-parser.add_argument('--ckpt_dir',type=str,default="8ywsmfyp")
+parser.add_argument('--base_dir', type=str,default="D:\Sean\github\cpjku_dcase23_NTU\embed")
+parser.add_argument('--ckpt_dir',type=str,default="jiw5bohu")
 parser.add_argument("--xfile", type=str, default="embeddings.txt", help="file name of feature stored")
 parser.add_argument("--yfile", type=str, default="labels.txt", help="file name of label stored")
 parser.add_argument("--cuda", type=int, default=1, help="if use cuda accelarate")
-
+# Add this argument for class selection
+parser.add_argument("--class_label", type=int, choices=range(10), default=9, help="Specify a class (0-9) to plot. If None, plot all classes.")
 opt = parser.parse_args()
 print("get choice from args", opt)
 xfile=os.path.join(opt.base_dir,opt.ckpt_dir,opt.xfile)
@@ -272,19 +273,39 @@ if __name__ == "__main__":
     
     # Step 2: Create the scatter plot with legend
     fig, ax = pyplot.subplots()
-
-    for i, label in enumerate(unique_labels):
-        indices = labels_subset == label  # Boolean array for current class
+    # Define a fixed scale for all plots
+    x_min, x_max = -100, 100  # Adjust these values based on typical t-SNE ranges observed in your data
+    y_min, y_max = -100, 100
+    ax.set_xlim(x_min, x_max)
+    ax.set_ylim(y_min, y_max)
+    
+    
+    # If a specific class is specified, plot only that class
+    if opt.class_label is not None:
+        target_label = opt.class_label
+        label_indices = labels_subset == target_label
         ax.scatter(
-            Y[indices, 0],  # x-coordinates for class 'label'
-            Y[indices, 1],  # y-coordinates for class 'label'
-            color=cmap(i),  # Assign unique color
-            label=label_names[int(label)],  # Label for the legend
-            s=20  # Marker size
+            Y[label_indices, 0],
+            Y[label_indices, 1],
+            color=cmap(int(target_label)),
+            label=label_names[int(target_label)],
+            s=20
         )
-
-    # Step 3: Add legend outside the plot
+        output_name = f"tsne_output_{label_names[int(target_label)]}.png"
+    else:
+        # Plot all classes
+        for i, label in enumerate(unique_labels):
+            indices = labels_subset == label
+            ax.scatter(
+                Y[indices, 0],
+                Y[indices, 1],
+                color=cmap(i),
+                label=label_names[int(label)],  
+                s=20
+            )
+        output_name = "tsne_output.png"
+    # Add legend and save
     ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
-    fig.tight_layout(rect=[0, 0, 1, 1])  # Adjust layout to fit legend
-    pyplot.savefig(os.path.join(opt.base_dir,opt.ckpt_dir,"tsne_output.png"))
+    fig.tight_layout(rect=[0, 0, 1, 1])
+    pyplot.savefig(os.path.join(opt.base_dir, opt.ckpt_dir, output_name))
     pyplot.show()
