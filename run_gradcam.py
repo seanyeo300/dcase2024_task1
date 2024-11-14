@@ -482,7 +482,7 @@ if __name__ == '__main__':
     parser.add_argument('--ckpt_id', type=str, default='ttpwu2wq')  # for loading trained model, corresponds to wandb id
     # GRADCAM
     parser.add_argument('--Cam', action='store_true', default=True, help='Use GradCAM for visualizing class activations')
-    parser.add_argument('--Cam_index', type=int, default=14843, help='Index of the audio sample to visualize with GradCAM')
+    parser.add_argument('--Cam_index', type=int, default=26720, help='Index of the audio sample to visualize with GradCAM')
     parser.add_argument('--CamMethod', type=str,default='GradCAM', help='Choose from GradCAM, HiResCAM, GradCAMPlusPlus, DeepFeatureFactorization') 
     parser.add_argument('--aug_smooth',action='store_true', default= False, help= 'toggle smoothing')
     # dataset
