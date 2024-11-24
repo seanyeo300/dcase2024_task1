@@ -36,9 +36,10 @@ dataset_config = {
     # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_PaSST_tv3b.pt") # tv3
     # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_PASST_TA2.pt")  #TA2
     # "logits_file": os.path.join("predictions","ensemble", "sub5_DyMN20_TA1.pt") # TA1->BCBL
-    # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_DCASE_aug.pt")       # DCASE ensemble 
-    # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_DCASE_style.pt")       # 3 BCBL 3 PaSST
-    "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_3SIT_3BCBL.pt")      # 3 BCBL 3 SIT
+    # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_DCASE_aug.pt")       # DCASE ensemble mix augs
+    "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_DCASE_style.pt")       # 3 BCBL 3 PaSST same augs
+    # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_3SIT_3BCBL.pt")      # 3 BCBL 3 SIT
+    # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_3SIT_3BCBL_augs.pt")      # 3 BCBL 3 SIT all augs
     #sub10
     # "logits_file": os.path.join("predictions","ensemble", "sub10_ensemble_6_PASST_tv1b.pt") # 
     # "logits_file": os.path.join("predictions","ensemble", "sub10_ensemble_6_PaSST_tv2c.pt") # tv2 

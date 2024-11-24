@@ -429,11 +429,11 @@ def evaluate(config):
           f" you are allowed to use at max the following precision for model parameters: {allowed_precision} bit.")
 
     # obtain and store details on model for reporting in the technical report
-    info = {}
-    info['MACs'] = macs
-    info['Params'] = params
-    res = trainer.test(pl_module, test_dl)
-    info['test'] = res
+    # info = {}
+    # info['MACs'] = macs
+    # info['Params'] = params
+    # res = trainer.test(pl_module, test_dl)
+    # info['test'] = res
 
     # generate predictions on evaluation set
     eval_dl = DataLoader(dataset=get_eval_set(),
@@ -463,8 +463,8 @@ def evaluate(config):
     # save eval set predictions, model state_dict and info to output folder
     df.to_csv(os.path.join(out_dir, 'output.csv'), sep='\t', index=False)
     torch.save(pl_module.model.state_dict(), os.path.join(out_dir, "model_state_dict.pt"))
-    with open(os.path.join(out_dir, "info.json"), "w") as json_file:
-        json.dump(info, json_file)
+    # with open(os.path.join(out_dir, "info.json"), "w") as json_file:
+    #     json.dump(info, json_file)
 
 
 if __name__ == '__main__':
