@@ -29,7 +29,8 @@ dataset_config = {
     "eval_meta_csv": os.path.join(dataset_dir, "meta.csv"), # to get the full prediction list with index intact
     # "logits_file": os.path.join("predictions","i3i3xf1x", "logits.pt")
     # "logits_file": os.path.join("predictions","ensemble", "ensemble_logits.pt") #specifies where the logit and predictions are stored. 
-    "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_PASST_tv1.pt") # Continual Learning teacher
+    "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_PASST_tv1.pt") # Continual Learning teacher 
+    
     # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_model_tv2b.pt") # tv2 
     # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_model_tv3b.pt") # tv3
     
