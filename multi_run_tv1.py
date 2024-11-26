@@ -93,13 +93,13 @@ if __name__ == "__main__":
         # (None, "NTU_KD_3SIT3BCBL-T_32BCBL-S_FMS_DIR_T=3_lmbda=0.05_sub5_fixh5")                # DCASE SIT BCBL T=3, lmbda = 0.05
         # (None, "NTU_KD_3PaSST3BCBL-T_32BCBL-S_FMS_DIR_stand_T=3_lmbda=0.05_sub5_fixh5")        # DCASE PaSST BCBL logit stand, T=3, lmbda=0.05
         # (None, "NTU_KD_3PaSST3BCBL-T_32BCBL-S_FMS_DIR_sub5_fixh5")                             # DCASE PaSST BCBL same augs
-        (None, "NTU_KD_3PaSST3BCBL_mixaug-T_32BCBL-S_FMS_DIR_sub5_fixh5")                        # DCASE PaSST BCBL mix augs
+        (None, "NTU_KD_3PaSST3BCBL_mixaug-T_32BCBL-S_FMS_DIR_sub5_ali_fixh5")                        # DCASE PaSST BCBL mix augs
         # (None, "NTU_KD_3PaSST3BCBL-T_32BCBL-S_FMS_DIR_T=2_lmbda=0.02_sub5_fixh5")              # DCASE PaSST BCBL T=2, lmbda=0.02
         # (None, "NTU_KD_tv1b-T_32BCBL-S_FMS_DIR_stand_lmda=0.1_sub5_fixh5") #tv1 logit stand
     ]
     
     # Number of times to repeat each experiment
-    num_repeats = 3
+    num_repeats = 1
 
     # Run the script with different checkpoint IDs and experiment names
     run_multiple_scripts(script_name, base_args, ckpt_experiment_pairs, num_repeats)
