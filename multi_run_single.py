@@ -39,11 +39,11 @@ def run_multiple_scripts(script_name, base_args, ckpt_experiment_pairs, num_repe
 
 if __name__ == "__main__":
     # Define the script to run
-    script_name = 'run_training_dev_h5.py'
-    # script_name = 'run_passt_cochl_tau_slowfast_subsets_DIR_FMS_h5.py'
+    # script_name = 'run_training_dev_h5.py'
+    script_name = 'run_passt_cochl_tau_slowfast_subsets_DIR_FMS_h5.py'
     # script_name = 'run_training_DynMN_h5_PL.py'
     # Base arguments (common to all runs, except experiment name and ckpt_id)
-    base_args = ['--gpu','[0]',"--subset", "5", "--dir_prob", "0.6", "--mixstyle_p", "0", "--sample_rate","44100"]#, "--batch_size", "48", "--pretrained", "--model_name", "mn30_as"]
+    base_args = ['--gpu','[0]',"--subset", "5", "--dir_prob", "0.6", "--mixstyle_p", "0.4", "--sample_rate","44100"]#, "--batch_size", "48", "--pretrained", "--model_name", "mn30_as"]
     
     # List of tuples containing checkpoint IDs and their corresponding experiment names
     ckpt_experiment_pairs = [
