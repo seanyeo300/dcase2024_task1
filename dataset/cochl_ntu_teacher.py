@@ -13,7 +13,7 @@ import pathlib
 import h5py
 
 # dataset_dir = r"D:\Sean\DCASE\datasets\Extract_to_Folder\TAU-urban-acoustic-scenes-2022-mobile-development" # Alibaba
-dataset_dir = r"F:\CochlScene\1s\Train" # DSP
+dataset_dir = r"F:\CochlScene\1s" # DSP
 assert dataset_dir is not None, "Specify 'TAU Urban Acoustic Scenes 2022 Mobile dataset' location in variable " \
                                 "'dataset_dir'. The dataset can be downloaded from this URL:" \
                                 " https://zenodo.org/record/6337421"
@@ -23,13 +23,13 @@ dataset_config = {
     "meta_csv": os.path.join(dataset_dir, "meta.csv"), # may need to change this
     "split_path": "split_setup",
     "split_url": "https://github.com/CPJKU/dcase2024_task1_baseline/releases/download/files/",
-    "test_split_csv": "test.csv",
+    "test_split_csv": "val_cochl.csv",
     "dirs_path": os.path.join("dataset", "dirs"),
     "eval_dir": os.path.join(dataset_dir), 
     "eval_meta_csv": os.path.join(dataset_dir, "meta.csv"), # to get the full prediction list with index intact
     # "logits_file": os.path.join("predictions","i3i3xf1x", "logits.pt")
-    # "logits_file": os.path.join("predictions","ensemble", "ensemble_logits.pt") #specifies where the logit and predictions are stored. 
-    "logits_file": os.path.join("predictions","ensemble", "sub5_PaSST_ensemble_6_logits.pt") # for small dataset
+    "logits_file": os.path.join("predictions","ensemble", "ensemble_logits.pt") #specifies where the logit and predictions are stored. 
+    # "logits_file": os.path.join("predictions","ensemble", "sub5_PaSST_ensemble_6_logits.pt") # for small dataset
     # "eval_dir": os.path.join(dataset_dir, "TAU-urban-acoustic-scenes-2024-mobile-evaluation"), 
     # "eval_meta_csv": os.path.join(dataset_dir,  "TAU-urban-acoustic-scenes-2024-mobile-evaluation", "meta.csv")
 }
@@ -44,7 +44,8 @@ class DirDataset(TorchDataset):
         self.dir_p = dir_p
 
     def __getitem__(self, index):
-        x, file, label, device, city, logits = self.ds[index]
+        # x, file, label, device, city, logits = self.ds[index]
+        x, file, label, device, city = self.ds[index]
 
         self.device = device
 
@@ -56,7 +57,7 @@ class DirDataset(TorchDataset):
             # get audio file with 'new' mic response
             x = convolve(x, dir, 'full')[:, :x.shape[1]]
             x = torch.from_numpy(x)
-        return x, file, label, device, city, logits
+        return x, file, label, device, city#, logits
 
     def __len__(self):
         return len(self.ds)  
@@ -312,7 +313,7 @@ class BasicDCASE24Dataseth5(TorchDataset):
         return len(self.files)
     
 def ntu_get_training_set_dir(split=100, dir_prob = False, hf_in=None, hmic_in=None): # this variant is for DIR augmentation
-    assert str(split) in ("5", "10", "25", "50", "100"), "Parameters 'split' must be in [5, 10, 25, 50, 100]"
+    assert str(split) in ("5", "10", "25", "50", "100","cochl"), "Parameters 'split' must be in [5, 10, 25, 50, 100]"
     os.makedirs(dataset_config['split_path'], exist_ok=True)
     subset_fname = f"split{split}.csv"
     subset_split_file = os.path.join(dataset_config['split_path'], subset_fname)
@@ -333,7 +334,7 @@ def ntu_get_base_training_set(meta_csv, train_files_csv, hf_in): # this variant 
     train_subset_indices = list(meta[meta['filename'].isin(train_files)].index)
     ds = SimpleSelectionDataset(BasicDCASE24Dataseth5(meta_csv, hf_in),
                                 train_subset_indices)
-    ds = AddLogitsDataset(ds, train_subset_indices, dataset_config['logits_file'])
+    # ds = AddLogitsDataset(ds, train_subset_indices, dataset_config['logits_file'])
     return ds
 
 def ntu_get_test_set(hf_in = None):

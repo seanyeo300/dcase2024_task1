@@ -29,7 +29,14 @@ dataset_config = {
     "eval_meta_csv": os.path.join(dataset_dir, "meta.csv"), # to get the full prediction list with index intact
     # "logits_file": os.path.join("predictions","i3i3xf1x", "logits.pt")
     # "logits_file": os.path.join("predictions","ensemble", "ensemble_logits.pt") #specifies where the logit and predictions are stored. 
-    "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_focusrep_4_logits.pt") # for small dataset
+    "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_PASST_tv1.pt") # Continual Learning teacher 
+    
+    # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_model_tv2b.pt") # tv2 
+    # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_6_model_tv3b.pt") # tv3
+    
+    # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_tv2.pt") # Continual Learning teacher
+    # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_tv3.pt") # Continual Learning teacher sub5_ensemble_12_model_tv5.pt
+    # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_12_model_tv5.pt")
     # "eval_dir": os.path.join(dataset_dir, "TAU-urban-acoustic-scenes-2024-mobile-evaluation"), 
     # "eval_meta_csv": os.path.join(dataset_dir,  "TAU-urban-acoustic-scenes-2024-mobile-evaluation", "meta.csv")
 }
@@ -45,14 +52,23 @@ class DirDataset(TorchDataset):
 
     def __getitem__(self, index):
         x, file, label, device, city, logits = self.ds[index]
-
-        self.device = device
+        fsplit = file.rsplit("-", 1)
+        device = fsplit[1][:-4]
 
         # New devices are created using device A + impulse function + DRC
-        if self.device == 'a' and self.dir_p > np.random.rand():
-            # choose a DIR at random
-            dir_idx = str(int(np.random.randint(0, len(self.hmic))))
-            dir = torch.from_numpy(self.hmic.get(dir_idx)[()])  
+        if device == 'a' and self.dir_p > np.random.rand():
+            all_keys = list(self.hmic.keys())
+            # Choose a random key
+            dir_key = np.random.choice(all_keys)
+            # print(f"Selected DIR key: {dir_key}")
+            
+            # Retrieve the corresponding DIR using the key
+            dir = torch.from_numpy(self.hmic.get(dir_key)[()])
+            
+            # # choose a DIR at random
+            # dir_idx = str(int(np.random.randint(0, len(self.hmic))))
+            # print(f"dir_idx:{dir_idx}")
+            # dir = torch.from_numpy(self.hmic.get(dir_idx)[()])
             # get audio file with 'new' mic response
             x = convolve(x, dir, 'full')[:, :x.shape[1]]
             x = torch.from_numpy(x)
@@ -311,7 +327,7 @@ class BasicDCASE24Dataseth5(TorchDataset):
     def __len__(self):
         return len(self.files)
     
-def ntu_get_training_set_dir(split=100, dir_prob = False, hf_in=None, hmic_in=None): # this variant is for DIR augmentation
+def ntu_get_training_set_dir(split=100, dir_prob = False, hf_in=None, hmic_in=None, roll = None): # this variant is for DIR augmentation
     assert str(split) in ("5", "10", "25", "50", "100"), "Parameters 'split' must be in [5, 10, 25, 50, 100]"
     os.makedirs(dataset_config['split_path'], exist_ok=True)
     subset_fname = f"split{split}.csv"
@@ -324,6 +340,8 @@ def ntu_get_training_set_dir(split=100, dir_prob = False, hf_in=None, hmic_in=No
     ds = ntu_get_base_training_set(dataset_config['meta_csv'], subset_split_file, hf_in)
     if dir_prob:
         ds = DirDataset(ds, hmic_in, dir_prob)
+    if roll:
+        ds = RollDataset(ds, shift_range=roll)
     return ds
 
 

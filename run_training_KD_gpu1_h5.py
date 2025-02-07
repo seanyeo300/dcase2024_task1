@@ -9,6 +9,7 @@ import transformers
 import wandb
 import json
 import torch.nn as nn
+import os
 
 from helpers.lr_schedule import exp_warmup_linear_down
 from dataset.dcase24_ntu_teacher import ntu_get_training_set_dir, ntu_get_test_set, ntu_get_eval_set, open_h5, close_h5
@@ -386,8 +387,15 @@ def train(config):
     ############ h5 edit end #################
 
     # create pytorch lightening module
+    # ckpt_dir = os.path.join(config.project_name, config.ckpt_id, "checkpoints")
+    # assert os.path.exists(ckpt_dir), f"No such folder: {ckpt_dir}"
+    # #ckpt_file = os.path.join(ckpt_dir, "last.ckpt")
+    # for file in os.listdir(ckpt_dir):
+    #     if "epoch" in file:
+    #         ckpt_file = os.path.join(ckpt_dir,file) # choosing the best model ckpt
+    #         print(f"found ckpt file: {file}")
     pl_module = PLModule(config)
-
+    # pl_module = PLModule.load_from_checkpoint(ckpt_file, config=config)
     # get model complexity from nessi and log results to wandb
     sample = next(iter(test_dl))[0][0].unsqueeze(0)
     shape = pl_module.mel_forward(sample).size()
@@ -524,14 +532,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='DCASE 24 argument parser')
 
     # general
-    parser.add_argument('--project_name', type=str, default="NTU_DCASE24_Task1")
-    parser.add_argument('--experiment_name', type=str, default="DCASE24_KD_4FocusEnsemble2Base_Ali1_sub5_FMS_DIR_32K_KLloss")
+    parser.add_argument('--project_name', type=str, default="ICASSP_BCBL_Task1")
+    parser.add_argument('--experiment_name', type=str, default="NTU_Var5-T_32BCBL-S_sub5_h5")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
 
     # evaluation
     parser.add_argument('--evaluate', action='store_true')  # predictions on eval set
-    parser.add_argument('--ckpt_id', type=str, default=None)  # for loading trained model, corresponds to wandb id
+    parser.add_argument('--ckpt_id', type=str, default=None)  # for loading trained model, corresponds to wandb id k0r7gu0i
 
     # dataset
     # subset in {100, 50, 25, 10, 5}
@@ -555,7 +563,7 @@ if __name__ == '__main__':
     parser.add_argument('--weight_decay', type=float, default=0.0001)
     # parser.add_argument('--roll_sec', type=int, default=0)
     parser.add_argument('--roll_sec', type=int, default=0)  # roll waveform over time
-    parser.add_argument('--dir_prob', type=float, default=0.6)  # prob. to apply device impulse response augmentation
+    parser.add_argument('--dir_prob', type=float, default=0.6)  # prob. to apply device impulse response augmentation default = 0.6
     
     ## knowledge distillation
     parser.add_argument('--temperature', type=float, default=2.0)

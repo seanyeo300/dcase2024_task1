@@ -405,7 +405,7 @@ def evaluate(config):
     pl_module = PLModule.load_from_checkpoint(ckpt_file, config=config)
     trainer = pl.Trainer(logger=False,
                          accelerator='gpu',
-                         devices=[1],
+                         devices=[0],
                          precision=config.precision)
 
     # evaluate lightning module on development-test split
@@ -429,11 +429,11 @@ def evaluate(config):
           f" you are allowed to use at max the following precision for model parameters: {allowed_precision} bit.")
 
     # obtain and store details on model for reporting in the technical report
-    info = {}
-    info['MACs'] = macs
-    info['Params'] = params
-    res = trainer.test(pl_module, test_dl)
-    info['test'] = res
+    # info = {}
+    # info['MACs'] = macs
+    # info['Params'] = params
+    # res = trainer.test(pl_module, test_dl)
+    # info['test'] = res
 
     # generate predictions on evaluation set
     eval_dl = DataLoader(dataset=get_eval_set(),
@@ -463,15 +463,15 @@ def evaluate(config):
     # save eval set predictions, model state_dict and info to output folder
     df.to_csv(os.path.join(out_dir, 'output.csv'), sep='\t', index=False)
     torch.save(pl_module.model.state_dict(), os.path.join(out_dir, "model_state_dict.pt"))
-    with open(os.path.join(out_dir, "info.json"), "w") as json_file:
-        json.dump(info, json_file)
+    # with open(os.path.join(out_dir, "info.json"), "w") as json_file:
+    #     json.dump(info, json_file)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='DCASE 24 argument parser')
 
     # general
-    parser.add_argument('--project_name', type=str, default="DCASE24_Task1")
+    parser.add_argument('--project_name', type=str, default="ICASSP_BCBL_Task1")
     parser.add_argument('--experiment_name', type=str, default="Baseline_Ali_sub100_eval_32BC")
     parser.add_argument('--num_workers', type=int, default=0)  # number of workers for dataloaders
     parser.add_argument('--precision', type=str, default="32")
@@ -489,7 +489,7 @@ if __name__ == '__main__':
     parser.add_argument('--n_classes', type=int, default=10)  # classification model with 'n_classes' output neurons
     parser.add_argument('--in_channels', type=int, default=1)
     # adapt the complexity of the neural network (3 main dimensions to scale the baseline)
-    parser.add_argument('--base_channels', type=int, default=24)
+    parser.add_argument('--base_channels', type=int, default=32)
     parser.add_argument('--channels_multiplier', type=float, default=1.8)
     parser.add_argument('--expansion_rate', type=float, default=2.1)
 
@@ -506,7 +506,7 @@ if __name__ == '__main__':
     parser.add_argument('--warmup_steps', type=int, default=100)
 
     # preprocessing
-    parser.add_argument('--sample_rate', type=int, default=44100)
+    parser.add_argument('--sample_rate', type=int, default=32000)
     parser.add_argument('--window_length', type=int, default=3072)  # in samples (corresponds to 96 ms)
     parser.add_argument('--hop_length', type=int, default=500)  # in samples (corresponds to ~16 ms)
     parser.add_argument('--n_fft', type=int, default=4096)  # length (points) of fft, e.g. 4096 point FFT

@@ -3,6 +3,76 @@ import torch
 from torch.distributions.beta import Beta
 import torch.nn.functional as F
 
+def NAME_TO_WIDTH(name):
+    mn_map = {
+        'mn01': 0.1,
+        'mn02': 0.2,
+        'mn04': 0.4,
+        'mn05': 0.5,
+        'mn06': 0.6,
+        'mn08': 0.8,
+        'mn10': 1.0,
+        'mn12': 1.2,
+        'mn14': 1.4,
+        'mn16': 1.6,
+        'mn20': 2.0,
+        'mn30': 3.0,
+        'mn40': 4.0,
+    }
+
+    dymn_map = {
+        'dymn04': 0.4,
+        'dymn10': 1.0,
+        'dymn20': 2.0
+    }
+
+    try:
+        if name.startswith('dymn'):
+            w = dymn_map[name[:6]]
+        else:
+            w = mn_map[name[:4]]
+    except:
+        w = 1.0
+
+    return w
+
+def mixup(size, alpha):
+    rn_indices = torch.randperm(size)
+    lambd = np.random.beta(alpha, alpha, size).astype(np.float32)
+    lambd = np.concatenate([lambd[:, None], 1 - lambd[:, None]], 1).max(1)
+    lam = torch.FloatTensor(lambd)
+    return rn_indices, lam
+
+def exp_warmup_linear_down(warmup, rampdown_length, start_rampdown, last_value):
+    rampup = exp_rampup(warmup)
+    rampdown = linear_rampdown(rampdown_length, start_rampdown, last_value)
+    def wrapper(epoch):
+        return rampup(epoch) * rampdown(epoch)
+    return wrapper
+
+
+def exp_rampup(rampup_length):
+    """Exponential rampup from https://arxiv.org/abs/1610.02242"""
+    def wrapper(epoch):
+        if epoch < rampup_length:
+            epoch = np.clip(epoch, 0.5, rampup_length)
+            phase = 1.0 - epoch / rampup_length
+            return float(np.exp(-5.0 * phase * phase))
+        else:
+            return 1.0
+    return wrapper
+
+
+def linear_rampdown(rampdown_length, start=0, last_value=0):
+    def wrapper(epoch):
+        if epoch <= start:
+            return 1.
+        elif epoch - start < rampdown_length:
+            return last_value + (1. - last_value) * (rampdown_length - epoch + start) / rampdown_length
+        else:
+            return last_value
+    return wrapper
+
 def mixstyle(x, p=0.4, alpha=0.3, eps=1e-6):
     if np.random.rand() > p:
         return x
