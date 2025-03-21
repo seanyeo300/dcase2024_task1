@@ -55,3 +55,10 @@ cams/ttpwu2wq_GradCAM/shopping_mall_activation_maps.pt
 cams/ttpwu2wq_GradCAM/street_pedestrian_activation_maps.pt
 cams/ttpwu2wq_GradCAM/street_traffic_activation_maps.pt
 cams/ttpwu2wq_GradCAM/tram_activation_maps.pt
+*.ckpt
+h5py_audio_wav
+h5py_cochl10_256bins
+h5py_cochl_train_mel_10s_128bins
+h5py_mel_256bins
+h5py_mic_wav_1
+h5py_TAU22_128bins
