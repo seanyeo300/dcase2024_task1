@@ -65,12 +65,13 @@ if __name__ == "__main__":
     # script_name = 'run_training_KD_gpu_h5_tv1_ensemble_TA.py'
     # script_name = 'run_training_KD_gpu_h5_tv1.py'
     # script_name = 'run_training_DynMN_h5_KD_tv1.py'
-    script_name = 'run_training_KD_logit_stand_h5_tv1.py' 
+    # script_name = 'run_training_KD_logit_stand_h5_tv1.py'
+    script_name = 'run_training_KD_gated_h5_tv1.py'
     # script_name = 'run_training_KD_teacher_logit_stand_h5_tv1.py'
     # script_name = 'run_training_DynMN_h5_KD_logit_stand_tv1.py'
     
     # Base arguments (common to all runs, except experiment name and ckpt_id)
-    base_args = ['--gpu','[1]',"--subset", "5", "--dir_prob", "0.6", "--mixstyle_p", "0.4","--kd_lambda","0.02","--temperature","2"]#,"--logit_stand"]# "--batch_size", "48","--pretrained","--model_name", "dymn10_as"] # this is for the KD process, does not apply to teachers!!! "--logit_stand"
+    base_args = ['--gpu','[0]',"--subset", "5", "--dir_prob", "0.6", "--mixstyle_p", "0.4","--kd_lambda","0.02","--temperature","3","--logit_stand"]# "--batch_size", "48","--pretrained","--model_name", "dymn10_as"] # this is for the KD process, does not apply to teachers!!! "--logit_stand"
     
     # List of tuples containing checkpoint IDs and their corresponding experiment names
     ckpt_experiment_pairs = [
@@ -98,11 +99,13 @@ if __name__ == "__main__":
         # (None, "NTU_KD_2PaSST2SIT2BCBL-T_32BCBL-S_FMS_DIR_sub5_ali_fixh5")                        # DCASE PaSST BCBL mix augs
         # (None, "NTU_KD_3PaSST3BCBL-T_32BCBL-S_FMS_DIR_T=2_lmbda=0.02_sub5_fixh5")              # DCASE PaSST BCBL T=2, lmbda=0.02
         # (None, "NTU_KD_tv1b-T_32BCBL-S_FMS_DIR_stand_lmda=0.1_sub5_fixh5") #tv1 logit stand
-        (None, "NTU_KD_single_SIT-T_32BCBL-S_FMS_DIR_sub5_fixh5")
+        # (None, "NTU_KD_single_SIT-T_32BCBL-S_FMS_DIR_sub5_fixh5")
+        # (None, "NTU_KD_3PaSST3BCBL-T_32BCBL-S_FMS_DIR_gated_T=3_lmbda=0.02_sub5_fixh5")          # DCASE PaSST BCBL gated, T=3, lmbda=0.02
+        (None, "NTU_KD_3SIT3BCBL-T_32BCBL-S_FMS_DIR_gated_T=3_lmbda=0.02_sub5_fixh5")          # DCASE SIT BCBL gated, T=3, lmbda=0.02
     ]
     
     # Number of times to repeat each experiment
-    num_repeats = 1
+    num_repeats = 2
 
     # Run the script with different checkpoint IDs and experiment names
     run_multiple_scripts(script_name, base_args, ckpt_experiment_pairs, num_repeats)
