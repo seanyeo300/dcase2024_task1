@@ -62,3 +62,8 @@ h5py_cochl_train_mel_10s_128bins
 h5py_mel_256bins
 h5py_mic_wav_1
 h5py_TAU22_128bins
+resources/dymn04_as.pt
+resources/dymn10_as.pt
+resources/dymn20_as_mAP_493.pt
+resources/mn20_as_mAP_478.pt
+resources/mn30_as_mAP_482.pt
