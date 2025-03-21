@@ -4,3 +4,4 @@ wandb/
 dcase2024_task1_submission_validator-main
 *h5py
 *.json
+*model_state_dict.pt
