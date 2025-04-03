@@ -41,7 +41,8 @@ dataset_config = {
     # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_3SIT_3BCBL.pt")      # 3 BCBL 3 SIT
     # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_3SIT_3BCBL_augs.pt")      # 3 BCBL 3 SIT all augs sub5_single_SIT
     # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_3PaSST_3BCBL_gated.pt")      # 3 BCBL 3 SIT all augs sub5_gated
-    "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_3SIT_3BCBL_gated.pt")      # 3 BCBL 3 SIT all augs sub5_gated
+    # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_3SIT_3BCBL_gated.pt")      # 3 BCBL 3 SIT all augs sub5_gated
+    "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_3SIT_3BCBL_max_vote.pt")      # 3 BCBL 3 SIT all augs sub5_maxvote
     # "logits_file": os.path.join("predictions","ensemble", "sub5_single_SIT.pt")
     # "logits_file": os.path.join("predictions","ensemble", "sub5_ensemble_3PaSST_3BCBL_nomixup.pt")       # NTU ensemble no mixup
     
