@@ -56,7 +56,7 @@ if __name__ == "__main__":
         # ("ke771aaz", "NTU_KD_Var3b-T_FTtau-S_FMS_DIR_sub10_fixh5")       #FTtau FMS DIR
         # ("y7frm0sm", "NTU_KD_Var3b-T_FTtau-S_FMS_sub5_fixh5"), #FTtau FMS
         # ("eqov5ca2", "NTU_KD_Var3b-T_FTtau-S_FMS_DIR_Mixup_sub5_fixh5"), #FTtau FMS DIR MIXUP
-        # (None, "NTU_KD_tv3b-T_32BCBL-S_FMS_DIR_temp=3_sub5_fixh5")          #tv3b
+        # (None, "NTU_KD_tv3b-T_32BCBL-S_FMS_DIR_temp=3_sub5_fixh5")          #tv3b== 6 SIT Ensemble, same augs
         # (None, "NTU_KD_TA3_96BCBL-T_32BCBL-S_FMS_DIR_sub5_fixh5")       #TA3_32 BC TA
         # (None, "NTU_KD_tv3b-T_DyMN20-TA_FMS_DIR_sub5_fixh5")     # Dymn20 tv3b
         # (None, "NTU_KD_tv3b-T_DyMN20-TA_NOAS_120_epoch_FMS_DIR_sub5_fixh5")     # tv3b->Dymn20 No AS pretrain

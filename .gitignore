@@ -67,3 +67,10 @@ resources/dymn10_as.pt
 resources/dymn20_as_mAP_493.pt
 resources/mn20_as_mAP_478.pt
 resources/mn30_as_mAP_482.pt
+predictions/ensemble/sub5_ensemble_3SIT_3BCBL_gated.pt
+predictions/ensemble/sub5_ensemble_3SIT_3BCBL_max_vote.pt
+predictions/ensemble/sub5_ensemble_3SIT_3BCBL_weighted_linear.pt
+predictions/ensemble/sub5_ensemble_3SIT_3BCBL_gated.pt
+predictions/ensemble/sub5_ensemble_3SIT_3BCBL_gated.pt
+predictions/ensemble/sub5_ensemble_3SIT_3BCBL_gated.pt
+predictions/ensemble/sub5_ensemble_3SIT_3BCBL_gated.pt
