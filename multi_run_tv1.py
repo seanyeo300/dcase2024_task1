@@ -84,6 +84,7 @@ if __name__ == "__main__":
         # ("y7frm0sm", "NTU_KD_Var1-T_FTtau-S_FMS_sub5_fixh5"),                                  #FTtau FMS
         # ("eqov5ca2", "NTU_KD_Var1-T_FTtau-S_FMS_DIR_Mixup_sub5_fixh5"),                        #FTtau FMS DIR MIXUP
         # (None, "NTU_KD_tv1b-T_32BCBL-S_FMS_DIR_sub5_fixh5")                    #tv1b
+                                                                                                 #tv3b== 6 SIT Ensemble, same augs
         # (None, "NTU_KD_Dy10TA1-T_32BCBL-S_FMS_DIR_sub5_fixh5")                                 #TA1
         # (None, "NTU_KD_tv1b-T_DyMN20-TA_FMS_DIR_sub5_fixh5")                                   # Dymn20 tv1b
         # (None, "NTU_KD_DyTA1-T_32BCBL-S_FMS_DIR_sub5_fixh5")                                   #TA1->BCBL distillation 
