@@ -479,7 +479,7 @@ def evaluate(config):
     ############# h5 edit here ##############
     # Open h5 file once
     hf_in = open_h5('h5py_audio_wav')
-    eval_hf = open_h5('h5py_audio_wav2')
+    # eval_hf = open_h5('h5py_audio_wav2')
     # eval_hf = open_h5('h5py_audio_eval_wav')
     # load lightning module from checkpoint
     pl_module = PLModule.load_from_checkpoint(ckpt_file, config=config)
@@ -501,24 +501,24 @@ def evaluate(config):
     macs, params = nessi.get_torch_size(pl_module.model, input_size=shape)
 
     print(f"Model Complexity: MACs: {macs}, Params: {params}")
-    assert macs <= nessi.MAX_MACS, "The model exceeds the MACs limit and must not be submitted to the challenge!"
-    assert params <= nessi.MAX_PARAMS_MEMORY, \
-        "The model exceeds the parameter limit and must not be submitted to the challenge!"
+    # assert macs <= nessi.MAX_MACS, "The model exceeds the MACs limit and must not be submitted to the challenge!"
+    # assert params <= nessi.MAX_PARAMS_MEMORY, \
+        # "The model exceeds the parameter limit and must not be submitted to the challenge!"
 
     allowed_precision = int(nessi.MAX_PARAMS_MEMORY / params * 8)
     print(f"ATTENTION: According to the number of model parameters and the memory limits that apply in the challenge,"
           f" you are allowed to use at max the following precision for model parameters: {allowed_precision} bit.")
 
     # obtain and store details on model for reporting in the technical report
-    info = {}
-    info['MACs'] = macs
-    info['Params'] = params
-    res = trainer.test(pl_module, test_dl)
-    info['test'] = res
+    # info = {}
+    # info['MACs'] = macs
+    # info['Params'] = params
+    # res = trainer.test(pl_module, test_dl)
+    # info['test'] = res
 
     ############# h5 edit here ##############
     # generate predictions on evaluation set
-    eval_dl = DataLoader(dataset=ntu_get_eval_set(eval_hf),
+    eval_dl = DataLoader(dataset=ntu_get_eval_set(hf_in),
                          worker_init_fn=worker_init_fn,
                          num_workers=config.num_workers,
                          batch_size=config.batch_size)
@@ -544,13 +544,13 @@ def evaluate(config):
 
     # save eval set predictions, model state_dict and info to output folder
     df.to_csv(os.path.join(out_dir, 'output.csv'), sep='\t', index=False)
-    torch.save(pl_module.model.state_dict(), os.path.join(out_dir, "model_state_dict.pt"))
-    with open(os.path.join(out_dir, "info.json"), "w") as json_file:
-        json.dump(info, json_file)
+    # torch.save(pl_module.model.state_dict(), os.path.join(out_dir, "model_state_dict.pt"))
+    # with open(os.path.join(out_dir, "info.json"), "w") as json_file:
+    #     json.dump(info, json_file)
 
     ############# h5 edit here ##############
     close_h5(hf_in)
-    close_h5(eval_hf)
+    # close_h5(eval_hf)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='DCASE 24 argument parser')

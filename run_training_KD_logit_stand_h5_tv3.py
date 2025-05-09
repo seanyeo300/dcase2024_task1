@@ -12,7 +12,7 @@ import torch.nn as nn
 import os
 
 from helpers.lr_schedule import exp_warmup_linear_down
-from dataset.dcase24_ntu_teacher_WSUM_tv2 import ntu_get_training_set_dir, ntu_get_test_set, ntu_get_eval_set, open_h5, close_h5
+from dataset.dcase24_ntu_teacher_logit_stand_tv3 import ntu_get_training_set_dir, ntu_get_test_set, ntu_get_eval_set, open_h5, close_h5
 from helpers.init import worker_init_fn
 from models.baseline import get_model
 from helpers.utils import mixstyle
@@ -161,11 +161,10 @@ class PLModule(pl.LightningModule):
         # Temperature adjusted probabilities of teacher and student
         if self.logit_stand:
             y_hat_stand = self.normalize(y_hat)
-            # teacher_stand = self.normalize(teacher_logits)
+            teacher_stand = self.normalize(teacher_logits)
             with torch.cuda.amp.autocast():                
                 y_hat_soft = F.log_softmax(y_hat_stand / self.config.temperature, dim=-1)
-                teacher_logits = F.log_softmax(teacher_logits / self.config.temperature, dim=-1)
-                # teacher_logits = F.log_softmax(teacher_stand / self.config.temperature, dim=-1)
+                teacher_logits = F.log_softmax(teacher_stand / self.config.temperature, dim=-1)
         else:
             with torch.cuda.amp.autocast():
                 y_hat_soft = F.log_softmax(y_hat / self.config.temperature, dim=-1)

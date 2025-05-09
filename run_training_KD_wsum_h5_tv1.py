@@ -161,7 +161,7 @@ class PLModule(pl.LightningModule):
         # Temperature adjusted probabilities of teacher and student
         if self.logit_stand:
             y_hat_stand = self.normalize(y_hat)
-            teacher_stand = self.normalize(teacher_logits)
+            # teacher_stand = self.normalize(teacher_logits)
             with torch.cuda.amp.autocast():                
                 y_hat_soft = F.log_softmax(y_hat_stand / self.config.temperature, dim=-1)
                 teacher_logits = F.log_softmax(teacher_logits / self.config.temperature, dim=-1)
