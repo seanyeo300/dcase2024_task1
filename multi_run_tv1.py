@@ -1,47 +1,7 @@
-# multi_run.py
-# import subprocess
-
-# def run_multiple_scripts(scripts_with_args):
-#     try:
-#         for script_name, args in scripts_with_args:
-#             subprocess.run(['python', script_name] + args)
-#     except Exception as e:
-#         print(f"An error occurred: {e}")
-
-# if __name__ == "__main__":
-#     # Example: Replace these with your actual script names and arguments
-#     scripts_to_run = [
-#         ('run_passt_cochl_PT_mel_h5.py', ['--lr', 1e-4]),
-#         ('run_passt_cochl_PT_mel_h5.py', [ '--lr', 1e-5]),
-#         ('run_passt_cochl_PT_mel_h5.py', [ '--lr', 1e-6])
-#     ]
-#     run_multiple_scripts(scripts_to_run)
-    
-#     import subprocess
-
-# def run_multiple_scripts(scripts_with_args):
-#     try:
-#         for script_name, args in scripts_with_args:
-#             # Convert all arguments to strings
-#             args = [str(arg) for arg in args]
-#             subprocess.run(['python', script_name] + args)
-#     except Exception as e:
-#         print(f"An error occurred: {e}")
-
-# if __name__ == "__main__":
-#     # Example: Replace these with your actual script names and arguments
-#     scripts_to_run = [
-#         ('run_passt_KD_Cochl_TAU_FT_subsets_DIR_FMS_h5.py', [ "--subset", "5", "--dir_prob", "0.6","--ckpt_id", "zs2yso3b", "--experiment_name", "NTU_KD_Var2b-T_SIT-S_FMS_DIR_sub5_fixh5"]),
-#         ('run_passt_KD_Cochl_TAU_FT_subsets_DIR_FMS_h5.py', [ "--subset", "5", "--dir_prob", "0.6","--ckpt_id", "zs2yso3b", "--experiment_name", "NTU_KD_Var2b-T_SIT-S_FMS_DIR_sub5_fixh5"]),
-#         ('run_passt_KD_Cochl_TAU_FT_subsets_DIR_FMS_h5.py', [ "--subset", "5", "--dir_prob", "0.6","--ckpt_id", "zs2yso3b", "--experiment_name", "NTU_KD_Var2b-T_SIT-S_FMS_DIR_sub5_fixh5"]),
-#         ('run_passt_KD_Cochl_TAU_FT_subsets_DIR_FMS_h5.py', [ "--subset", "5", "--dir_prob", "0.6","--ckpt_id", "zs2yso3b", "--experiment_name", "NTU_KD_Var2b-T_SIT-S_FMS_DIR_sub5_fixh5"]),
-#         ('run_passt_KD_Cochl_TAU_FT_subsets_DIR_FMS_h5.py', [ "--subset", "5", "--dir_prob", "0.6","--ckpt_id", "zs2yso3b", "--experiment_name", "NTU_KD_Var2b-T_SIT-S_FMS_DIR_sub5_fixh5"]),
-#         ('run_passt_KD_Cochl_TAU_FT_subsets_DIR_FMS_h5.py', [ "--subset", "5", "--dir_prob", "0.6","--ckpt_id", "zs2yso3b", "--experiment_name", "NTU_KD_Var2b-T_SIT-S_FMS_DIR_sub5_fixh5"])
-#     ]
-#     run_multiple_scripts(scripts_to_run)
+# This script is designed to run a specified Python script multiple times with different checkpoint IDs and experiment names.
     
 import subprocess
-
+import time
 def run_multiple_scripts(script_name, base_args, ckpt_experiment_pairs, num_repeats):
     try:
         for ckpt_id, experiment_name in ckpt_experiment_pairs:
@@ -61,18 +21,26 @@ def run_multiple_scripts(script_name, base_args, ckpt_experiment_pairs, num_repe
 # 3. Check model variants and individual Checkpoint IDs
 
 if __name__ == "__main__":
+    ### DELAY CONFIGURATION ###
+    # DELAY_SECONDS = 12000  # Delay for 5 minutes (set to 0 to skip)
+    DELAY_SECONDS = 0 # Delay by 1 run (set to 0 to skip)
+    print(f"[INFO] Delaying execution for {DELAY_SECONDS} seconds...")
+    time.sleep(DELAY_SECONDS)
     # Define the script to run
     # script_name = 'run_training_KD_gpu_h5_tv1_ensemble_TA.py'
     # script_name = 'run_training_KD_gpu_h5_tv1.py'
     # script_name = 'run_training_DynMN_h5_KD_tv1.py'
     # script_name = 'run_training_KD_logit_stand_h5_tv1.py'
-    # script_name = 'run_training_KD_gated_h5_tv1.py'
-    script_name = 'run_training_KD_wsum_h5_tv1.py'
+    # script_name = 'run_training_KD_logit_stand_h5_tv2.py'
+    # script_name = 'run_training_KD_logit_stand_h5_tv3.py'
+    # script_name = 'run_training_KD_logit_stand_h5_tv4.py'
+    script_name = 'run_training_KD_gated_h5_tv1.py'
+    # script_name = 'run_training_KD_wsum_h5_tv1.py'
     # script_name = 'run_training_KD_teacher_logit_stand_h5_tv1.py'
     # script_name = 'run_training_DynMN_h5_KD_logit_stand_tv1.py'
     
     # Base arguments (common to all runs, except experiment name and ckpt_id)
-    base_args = ['--gpu','[0]',"--subset", "5", "--dir_prob", "0.6", "--mixstyle_p", "0.4","--kd_lambda","0.01","--temperature","3","--logit_stand"]# "--batch_size", "48","--pretrained","--model_name", "dymn10_as"] # this is for the KD process, does not apply to teachers!!! "--logit_stand"
+    base_args = ['--gpu','[0]',"--subset", "5", "--dir_prob", "0.6", "--mixstyle_p", "0.4","--kd_lambda","0.02","--temperature","3","--logit_stand"]# "--batch_size", "48","--pretrained","--model_name", "dymn10_as"] # this is for the KD process, does not apply to teachers!!! "--logit_stand"
     
     # List of tuples containing checkpoint IDs and their corresponding experiment names
     ckpt_experiment_pairs = [
@@ -99,11 +67,25 @@ if __name__ == "__main__":
         # (None, "NTU_KD_3PaSST3BCBL_mixaug-T_32BCBL-S_FMS_DIR_sub5_ali_fixh5")                  # DCASE PaSST BCBL mix augs
         # (None, "NTU_KD_3PaSST3BCBL_mixaug-T_32BCBL-S_FMS_DIR_nomixup_sub5_fixh5")                # NTU PaSST BCBL mix augs no BCBL mixup
         # (None, "NTU_KD_2PaSST2SIT2BCBL-T_32BCBL-S_FMS_DIR_sub5_ali_fixh5")                        # DCASE PaSST BCBL mix augs
-        # (None, "NTU_KD_3PaSST3BCBL-T_32BCBL-S_FMS_DIR_T=2_lmbda=0.02_sub5_fixh5")              # DCASE PaSST BCBL T=2, lmbda=0.02
+        # (None, "NTU_KD_6SIT6CPR-T_32BCBL-S_FMS_DIR_T=2_lmbda=0.02_sub5_fixh5")                 # DCASE SIT CPR T=2, lmbda=0.02
+        # (None, "NTU_KD_6PASST6CPR-T_32BCBL-S_FMS_DIR_T=2_lmbda=0.02_sub5_retest_fixh5")                   # DCASE PaSST CPR T=2, lmbda=0.02
+        # (None, "NTU_KD_6SIT6BCBL-T_32BCBL-S_FMS_DIR_T=2_lmbda=0.02_sub5_fixh5")                   # DCASE SIT BCBL T=2, lmbda=0.02 mixed augs
+        # (None, "NTU_KD_6SIT6BCBL_mixaug-T_32BCBL-S_FMS_DIR_wsum_T=3_lmbda=0.04_sub5_fixh5")                   # DCASE SIT BCBL T=3, lmbda=0.02 mixed augs
+        (None, "NTU_KD_6SIT6BCBL_mixaug-T_32BCBL-S_FMS_DIR_max_vote_T=3_lmbda=0.02_sub5_fixh5")                   # DCASE SIT BCBL T=3, lmbda=0.02 mixed augs
+        # (None, "NTU_KD_6SIT6BCBL_sameaugs-T_32BCBL-S_FMS_DIR_T=2_lmbda=0.02_sub5_fixh5")                   # DCASE SIT BCBL T=2, lmbda=0.02 same augs
+        # (None, "NTU_KD_6PaSST6BCBL_mixaugs-T_32BCBL-S_FMS_DIR_T=2_lmbda=0.02_sub5_fixh5")                   # DCASE PaSST BCBL T=2, lmbda=0.02 mix augs
+        # (None, "NTU_KD_6PaSST6BCBL_sameaugs-T_32BCBL-S_FMS_DIR_T=2_lmbda=0.02_sub5_fixh5")                   # DCASE PaSST BCBL T=2, lmbda=0.02 same augs
+        # (None, "NTU_KD_6BCBL-T_32BCBL-S_FMS_DIR_T=2_lmbda=0.02_sub5_fixh5")                   # DCASE 6 BCBL T=2, lmbda=0.02 Same Augs
+        # (None, "NTU_KD_12SIT-T_32BCBL-S_FMS_DIR_T=2_lmbda=0.02_sub5_fixh5")                   # DCASE SIT T=2, lmbda=0.02
+        # (None, "NTU_KD_12PaSST-T_32BCBL-S_FMS_DIR_T=2_lmbda=0.02_sub5_fixh5")                   # DCASE PaSST T=2, lmbda=0.02
+        # (None, "NTU_KD_6PaSST_6CPR-T_32BCBL-S_sameaugs_FMS_DIR_T=2_lmbda=0.02_sub5_fixh5")                   # DCASE PaSST T=2, lmbda=0.02
+        # (None, "NTU_KD_6SIT_6CPR-T_32BCBL-S_sameaugs_FMS_DIR_T=2_lmbda=0.02_sub5_fixh5_retest")                   # DCASE PaSST T=2, lmbda=0.02
+        # (None, "NTU_KD_3SIT3CPR-T_32BCBL-S_mixaugs_FMS_DIR_T=2_lmbda=0.02_sub5_fixh5")                   # DCASE PaSST T=2, lmbda=0.02
+        # (None, "NTU_KD_6SIT6CPR-T_32BCBL-S_mixaugs_FMS_DIR_stand_T=3_lmbda=0.01_sub5_fixh5")                   # DCASE PaSST T=2, lmbda=0.02
         # (None, "NTU_KD_tv1b-T_32BCBL-S_FMS_DIR_stand_lmda=0.1_sub5_fixh5") #tv1 logit stand
         # (None, "NTU_KD_single_SIT-T_32BCBL-S_FMS_DIR_sub5_fixh5")
         # (None, "NTU_KD_3SIT3BCBL-T_32BCBL-S_FMS_DIR_max_vote_T=3_lmbda=0.01_sub5_fixh5")          # DCASE PaSST BCBL gated, T=3, lmbda=0.02
-        (None, "NTU_KD_3SIT3BCBL-T_32BCBL-S_FMS_DIR_wsum_T=3_lmbda=0.01_sub5_fixh5")          # DCASE SIT BCBL gated, T=3, lmbda=0.02
+        # (None, "NTU_KD_3SIT3BCBL-T_32BCBL-S_FMS_DIR_wsum_T=3_lmbda=0.01_sub5_fixh5")          # DCASE SIT BCBL gated, T=3, lmbda=0.02
     ]
     
     # Number of times to repeat each experiment
