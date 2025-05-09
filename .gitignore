@@ -67,7 +67,6 @@ resources/dymn10_as.pt
 resources/dymn20_as_mAP_493.pt
 resources/mn20_as_mAP_478.pt
 resources/mn30_as_mAP_482.pt
-predictions/ensemble/sub5_ensemble_3SIT_3BCBL_gated.pt
 predictions/ensemble/sub5_ensemble_3SIT_3BCBL_max_vote.pt
 predictions/ensemble/sub5_ensemble_3SIT_3BCBL_weighted_linear.pt
 h5py_ICME_128_1s_mel
@@ -85,7 +84,6 @@ predictions/ensemble/sub5_12_hetero_SIT.pt
 predictions/ensemble/sub5_12_homo_SFT.pt
 predictions/ensemble/sub5_12_homo_SIT.pt
 predictions/ensemble/sub5_6_hetero_mixaug_SIT.pt
-predictions/ensemble/sub5_ensemble_3SIT_3BCBL_gated.pt
 predictions/ensemble/sub5_ensemble_6_BCBL.pt
 predictions/ensemble/sub5_ensemble_6SIT_6BCBL_max_vote.pt
 predictions/ensemble/sub5_ensemble_6SIT_6BCBL_weighted_linear.pt
