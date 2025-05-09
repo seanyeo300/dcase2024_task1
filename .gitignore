@@ -70,10 +70,6 @@ resources/mn30_as_mAP_482.pt
 predictions/ensemble/sub5_ensemble_3SIT_3BCBL_gated.pt
 predictions/ensemble/sub5_ensemble_3SIT_3BCBL_max_vote.pt
 predictions/ensemble/sub5_ensemble_3SIT_3BCBL_weighted_linear.pt
-predictions/ensemble/sub5_ensemble_3SIT_3BCBL_gated.pt
-predictions/ensemble/sub5_ensemble_3SIT_3BCBL_gated.pt
-predictions/ensemble/sub5_ensemble_3SIT_3BCBL_gated.pt
-predictions/ensemble/sub5_ensemble_3SIT_3BCBL_gated.pt
 h5py_ICME_128_1s_mel
 h5py_TUT_2017_128_mel
 h5py_TUT_2018_128_mel
